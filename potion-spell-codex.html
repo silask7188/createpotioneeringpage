@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create: Potioneering Potion Tree</title>
+</head>
+<body>
+<title>Create: Potioneering Potion Tree</title>
+<style>
+  :root{
+    --bg:#14121c; --bg2:#100e17; --panel:#1e1b29; --panel2:#26222f;
+    --line:#322c43; --ink:#f3f1fb; --muted:#ada6c2; --faint:#7d7693;
+    --accent:#9b7bff; --confirm:#3fc9a0;
+    --combat:#e0574e; --survival:#57c97a; --movement:#4db6e0; --mining:#e0a83a;
+    --utility:#6f86ff; --curse:#b46ad6; --vision:#e05ab0; --environment:#34c7a2;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{background:#14121c;color-scheme:dark}
+  html,body,button,input{color:#f3f1fb}
+  body{margin:0;min-height:100vh;background:
+      radial-gradient(1200px 600px at 75% -10%, rgba(155,123,255,.10), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(52,199,162,.07), transparent 55%),
+      var(--bg);
+    color:var(--ink);font-family:var(--sans);line-height:1.5;
+    font-size:15px;-webkit-font-smoothing:antialiased;}
+  a{color:inherit}
+
+  /* ---- header ---- */
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(8px);
+    background:linear-gradient(180deg,rgba(16,14,23,.94),rgba(16,14,23,.82));
+    border-bottom:1px solid var(--line);padding:14px 20px;}
+  .hrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;max-width:1500px;margin:0 auto}
+  h1{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:0;letter-spacing:.01em;text-wrap:balance}
+  h1 .glow{color:var(--accent)}
+  .sub{color:var(--muted);font-size:.84rem;margin:0}
+  .tools{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #search{background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:7px 11px;font-size:.85rem;width:190px;font-family:var(--sans)}
+  #search:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .toggle{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:.8rem;cursor:pointer;user-select:none}
+  .toggle input{accent-color:var(--accent);width:15px;height:15px}
+
+  /* progress meter */
+  .meter{display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--muted)}
+  .bar{width:150px;height:8px;border-radius:99px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--confirm),#6fe0c0);width:0;transition:width .35s}
+  .meter b{color:var(--confirm);font-variant-numeric:tabular-nums;font-weight:600}
+
+  /* tabs */
+  .tabs{display:flex;gap:7px;max-width:1500px;margin:12px auto 0}
+  .tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    padding:8px 18px;border-radius:9px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:var(--serif)}
+  .tab.on{background:var(--accent);color:#16121f;border-color:var(--accent)}
+  .tab:hover:not(.on){color:var(--ink);border-color:var(--accent)}
+  .tab:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .modehint{max-width:1500px;margin:8px auto 0;font-size:.78rem;color:var(--faint);font-style:italic}
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:1500px;margin:10px auto 0;font-size:.74rem;color:var(--muted)}
+  .legend .legendhint{color:var(--faint);margin-right:2px}
+  .legend button{display:inline-flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);
+    color:var(--muted);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:var(--sans);font-size:.74rem;user-select:none}
+  .legend button:hover{border-color:var(--accent);color:var(--ink)}
+  .legend button.off{opacity:.38;text-decoration:line-through}
+  .legend button .catcount{background:var(--panel2);color:var(--ink);border-radius:99px;padding:0 6px;
+    font-size:.66rem;font-variant-numeric:tabular-nums;min-width:16px;text-align:center}
+  .legend button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .dot{width:9px;height:9px;border-radius:99px;box-shadow:0 0 6px currentColor}
+
+  /* download/status toast */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:60;
+    max-width:min(560px,92vw);background:var(--panel2);color:var(--ink);border:1px solid var(--accent);
+    border-radius:10px;padding:11px 16px;font-size:.86rem;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---- tree ---- */
+  main{max-width:1500px;margin:0 auto;padding:8px 20px 40px;position:relative}
+  #wrap{position:relative}
+  svg#links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible}
+  .tier{position:relative;z-index:1;padding:14px 0;border-bottom:1px dashed var(--line)}
+  .tier:last-child{border-bottom:0}
+  .tlabel{font-family:var(--serif);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 9px;display:flex;align-items:center;gap:10px}
+  .tlabel::after{content:"";flex:1;height:1px;background:var(--line)}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+
+  .node{position:relative;display:flex;align-items:center;gap:8px;cursor:pointer;
+    background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--c,var(--accent));
+    border-radius:9px;padding:7px 11px 7px 10px;transition:transform .12s,border-color .12s,background .12s,opacity .2s;
+    min-height:34px}
+  .node:hover{transform:translateY(-1px);background:var(--panel2)}
+  .node:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .node .nm{font-size:.86rem;font-weight:500;white-space:nowrap}
+  .node .tg{font-family:var(--mono);font-size:.62rem;color:var(--bg);background:var(--c,var(--accent));
+    padding:1px 5px;border-radius:5px;font-weight:700;opacity:.92}
+  .node .ck{width:8px;height:8px;border-radius:99px;border:1.5px solid var(--faint);flex:0 0 auto}
+  .node.works .ck{background:var(--confirm);border-color:var(--confirm);box-shadow:0 0 7px var(--confirm)}
+  .node.works{border-color:rgba(63,201,160,.5)}
+  .node.sel{transform:translateY(-1px);background:var(--panel2);box-shadow:0 0 0 2px var(--accent),0 6px 20px rgba(0,0,0,.4)}
+  .node.dim{opacity:.18}
+  .node.hit{opacity:1}
+  /* vanilla potions & water, base ingredients, lighter & secondary vs. the custom vials */
+  .node.vanilla{background:#2c2939;border-color:#433c57}
+  .node.vanilla:hover{background:#353047}
+  .node.vanilla .nm{color:#d6d1e6;font-weight:400}
+  .node.vanilla .tg{background:#5d5677;color:#efedf6;opacity:1}
+  .vanlabel{color:var(--faint)}
+
+  /* ---- detail drawer ---- */
+  #scrim{position:fixed;inset:0;background:rgba(8,7,12,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+  #scrim.on{opacity:1;pointer-events:auto}
+  #detail{position:fixed;top:0;right:0;height:100%;width:min(420px,92vw);z-index:50;
+    background:linear-gradient(180deg,var(--panel),var(--bg2));border-left:1px solid var(--line);
+    box-shadow:-18px 0 50px rgba(0,0,0,.5);transform:translateX(102%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+    display:flex;flex-direction:column}
+  #detail.on{transform:none}
+  .dhead{padding:20px 22px 16px;border-bottom:1px solid var(--line);position:relative}
+  .dclose{position:absolute;top:14px;right:16px;background:none;border:0;color:var(--muted);font-size:1.5rem;
+    cursor:pointer;line-height:1;padding:4px}
+  .dclose:hover{color:var(--ink)}
+  .dchips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+  .chip{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;
+    padding:3px 8px;border-radius:6px;color:var(--bg);background:var(--c,var(--accent))}
+  .chip.kind{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600}
+  #dname{font-family:var(--serif);font-size:1.55rem;margin:0;font-weight:600;text-wrap:balance}
+  .dbody{padding:18px 22px;overflow-y:auto;flex:1}
+  .reclabel,.caselabel{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
+  .ddesc{font-size:.92rem;line-height:1.55;color:var(--ink);margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .ddesc:empty{display:none}
+  .recipe{font-family:var(--mono);font-size:.9rem;background:var(--bg2);border:1px solid var(--line);
+    border-radius:9px;padding:11px 13px;color:#cfe8df;word-break:break-word}
+  .recipe .arrow{color:var(--accent)}
+  .cases{margin-top:20px;display:flex;flex-direction:column;gap:2px}
+  .case{display:grid;grid-template-columns:34px 1fr;gap:11px;padding:12px 2px;border-top:1px solid var(--line)}
+  .case .ic{font-size:1.15rem;text-align:center;line-height:1.4}
+  .case .lab{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+  .case .txt{font-size:.9rem;margin:0}
+  .case.none .txt{color:var(--faint);font-style:italic}
+
+  .worksbox{margin:22px 0 6px;display:flex;align-items:center;gap:12px;background:var(--bg2);
+    border:1px solid var(--line);border-radius:11px;padding:14px 16px;cursor:pointer;user-select:none;transition:border-color .15s}
+  .worksbox:hover{border-color:var(--confirm)}
+  .worksbox.on{border-color:var(--confirm);background:rgba(63,201,160,.08)}
+  .wcheck{width:24px;height:24px;border-radius:7px;border:2px solid var(--faint);flex:0 0 auto;
+    display:grid;place-items:center;transition:.15s;font-weight:700;color:var(--bg)}
+  .worksbox.on .wcheck{background:var(--confirm);border-color:var(--confirm)}
+  .wcheck svg{width:15px;height:15px;opacity:0;transition:.15s}
+  .worksbox.on .wcheck svg{opacity:1}
+  .worksbox .wt{font-size:.92rem;font-weight:600}
+  .worksbox .ws{font-size:.74rem;color:var(--muted)}
+
+  .empty{color:var(--faint);text-align:center;padding:60px 20px;font-family:var(--serif);font-style:italic}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* ---- responsive / mobile ---- */
+  main{overflow-x:hidden}
+  #zoomctl{display:none}
+  .filttoggle{display:none}
+  @media (max-width:820px){
+    header{padding:9px 12px}
+    .hrow{gap:6px 10px}
+    h1{font-size:1.12rem}
+    .sub{display:none}                              /* subtitle drops on phones */
+    /* one compact row: search grows, then a Filters button + download; everything else collapses away */
+    .tools{margin-left:0;width:100%;gap:8px 10px}
+    #search{flex:1 1 120px;width:auto;min-width:0;padding:9px 11px;order:1}
+    .filttoggle{display:inline-flex;align-items:center;gap:6px;order:2;cursor:pointer;
+      background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+      padding:9px 12px;font-size:.82rem;font-weight:600;font-family:var(--sans);white-space:nowrap}
+    .filttoggle:active{border-color:var(--accent)}
+    /* the meter, glow/verify toggles and the category legend hide until Filters is tapped */
+    .meter,.tools .toggle,#legend{display:none;order:9}
+    .meter{width:100%}
+    .bar{width:120px}
+    header.showfilters .meter{display:flex}
+    header.showfilters .tools .toggle{display:flex}
+    header.showfilters #legend{display:flex}
+    .toggle input{width:18px;height:18px}
+    .modehint{padding:0 2px;font-size:.74rem;margin-top:6px}
+    #legend{padding:0 2px;margin-top:8px}
+    .legend button{padding:6px 11px}
+  }
+  @media (max-width:560px){
+    #detail{width:100vw;top:auto;bottom:0;height:85vh;transform:translateY(102%);
+      border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0}
+    #detail.on{transform:none}
+    #dname{font-size:1.3rem}
+    .dhead{padding:16px 18px 14px}
+    .dbody{padding:16px 18px calc(18px + env(safe-area-inset-bottom))}
+    .dclose{font-size:1.9rem;padding:8px}
+  }
+
+  /* ---- mobile: the tree becomes a zoomable / pannable canvas (JS toggles body.panmode) ---- */
+  body.panmode{overflow:hidden;height:100dvh}
+  body.panmode main{max-width:none;margin:0;padding:0;overflow:hidden;position:relative;
+    touch-action:none;-webkit-user-select:none;user-select:none}
+  body.panmode #wrap{position:absolute;top:0;left:0;width:920px;transform-origin:0 0;will-change:transform}
+  body.panmode #zoomctl{display:flex}
+  #zoomctl{position:fixed;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:35;
+    flex-direction:column;gap:9px}
+  #zoomctl button{width:48px;height:48px;border-radius:13px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--ink);font-size:1.45rem;font-weight:700;line-height:1;
+    display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    -webkit-user-select:none;user-select:none;font-family:var(--sans)}
+  #zoomctl button:active{background:var(--accent);color:#16121f;border-color:var(--accent)}
+  #zoomctl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<header>
+  <div class="hrow">
+    <div>
+      <h1>Create: Potioneering <span class="glow">Potion Tree</span></h1>
+      <p class="sub">Every brewed & reacted potion · tap a vial for its recipe and effects · check off what you've verified in-game</p>
+    </div>
+    <div class="tools">
+      <div class="meter" title="Effects you've marked working">
+        <div class="bar"><i id="barfill"></i></div>
+        <span><b id="mnum">0</b> / <span id="mtot">0</span> working</span>
+      </div>
+      <label class="toggle" title="Outline each vial red→green by how many children it has (red≈0, green≈5+)"><input type="checkbox" id="childglow"> child glow</label>
+      <label class="toggle" title="Outline each vial red→green by effect duration (≤30s red, 8min+ green)"><input type="checkbox" id="durglow"> duration glow</label>
+      <label class="toggle"><input type="checkbox" id="onlyun"> only unverified</label>
+      <input id="search" type="search" placeholder="search spell…" autocomplete="off">
+      <button class="filttoggle" id="filttoggle" aria-expanded="false" title="Filters, legend & progress">☰ Filters</button>
+    </div>
+  </div>
+  <p class="modehint" id="modehint">Hover a vial to trace its family tree · click for its recipe and effects.</p>
+  <div class="legend" id="legend"></div>
+</header>
+
+<main>
+  <div id="wrap">
+    <svg id="links"></svg>
+    <div id="tree"></div>
+  </div>
+</main>
+
+<div id="zoomctl" aria-hidden="true">
+  <button id="zin" aria-label="Zoom in" title="Zoom in">+</button>
+  <button id="zout" aria-label="Zoom out" title="Zoom out">−</button>
+  <button id="zfit" aria-label="Fit whole tree" title="Fit whole tree">⤢</button>
+</div>
+
+<div id="scrim"></div>
+<aside id="detail" aria-hidden="true">
+  <div class="dhead">
+    <button class="dclose" id="dclose" aria-label="Close">×</button>
+    <div class="dchips" id="dchips"></div>
+    <h2 id="dname"></h2>
+  </div>
+  <div class="dbody">
+    <p class="ddesc" id="ddesc"></p>
+    <p class="reclabel">Unstable recipe</p>
+    <div class="recipe" id="drecipe"></div>
+    <div class="cases" id="dcases"></div>
+    <div class="worksbox" id="worksbox" role="button" tabindex="0">
+      <div class="wcheck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div>
+        <div class="wt">Works in-game</div>
+        <div class="ws">Tap to mark this effect verified</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script>
+const CATS={combat:"Combat",survival:"Survival",movement:"Movement",mining:"Mining",utility:"Utility",curse:"Curse",vision:"Vision",environment:"Environment"};
+const TIERLABEL=["Brewed (Awkward + item)","Generation I","Generation II","Generation III","Generation IV","Generation V"];
+
+// [key, name, tier, recipe, [parentKeys]]
+const NODES=[
+ ["thermite","Thermite",3,"Acid + Highly Flammable",["acid", "highly_flammable"]],
+ ["phantom_legion","Phantom Legion",4,"Hallucination + Mob Mask",["hallucination", "mob_mask"]],
+ ["moon_gravity","Moon Gravity",3,"Long Jump + Vacuum",["long_jump", "vacuum"]],
+ ["medusa_gaze","Medusa's Gaze",3,"Petrify + Hunted",["petrify", "hunted"]],
+ ["monument","Monument",4,"Petrify + Stoneskin",["petrify", "stoneskin"]],
+ ["quicksand","Quicksand",3,"Petrify + Heavy",["petrify", "heavy"]],
+ ["harmless","Harmless",3,"Sapping + Weakness",["sapping", "v_weakness"]],
+ ["enervate","Enervate",3,"Sapping + Mining Fatigue",["sapping", "v_mining_fatigue"]],
+ ["demoralize","Demoralize",3,"Sapping + Shadowmeld",["sapping", "shadowmeld"]],
+ ["contagion","Contagion",3,"Vulnerability + Blight",["vulnerability", "blight"]],
+ ["faewild","Faewild",2,"Sprout + Bloomlight",["sprout","bloomlight"]],
+ ["ravenous","Ravenous",3,"Blight + Gluttony",["blight", "gluttony"]],
+ ["sated","Sated",3,"Gluttony + Iron Stomach",["gluttony", "iron_stomach"]],
+ ["telekinesis","Telekinesis",3,"Long Arm + Phasing",["longarm", "phasing"]],
+ ["grappler","Grappler",2,"Magnetized + Brawler",["magnetized", "brawler"]],
+ ["stunning_fist","Stunning Fist",4,"Brawler + Slumber",["brawler", "slumber"]],
+ ["iron_body","Iron Body",4,"Brawler + Stoneskin",["brawler", "stoneskin"]],
+ ["counter","Counter",4,"Brawler + Riposte Charge",["brawler", "riposte_charge"]],
+ ["haymaker","Haymaker",3,"Brawler + Momentum",["brawler", "momentum"]],
+ ["brawler","Brawler",1,"Tipsy + Keen",["tipsy","keen"]],
+ ["magnetized","Magnetized",1,"Static + Sturdy",["static","sturdy"]],
+ ["gallop","Gallop",4,"Long Jump + Swiftness",["long_jump", "v_swiftness"]],
+ ["trample","Trample",4,"Ground Pound + Harming",["ground_pound", "v_harming"]],
+ ["bonded","Bonded",4,"Pack Leader + Beckon",["pack_leader", "beckon"]],
+ ["pack_leader","Pack Leader",3,"Fetch + Hunted",["fetch", "hunted"]],
+ ["kinship","Kinship",1,"Regeneration \u00d72 + Weakness",["v_regeneration", "v_weakness"]],
+ ["fetch","Fetch",1,"Foraging + Regeneration",["foraging","v_regeneration"]],
+ ["beckon","Beckon",2,"Fetch + Kinship",["fetch", "kinship"]],
+ ["doom","Doom",3,"Volatile + Wither",["volatile", "wither"]],
+ ["sundering","Sundering",3,"Corrosion + Weakness",["corrosion", "v_weakness"]],
+ ["bleeding","Bleeding",2,"Keen + Wither",["keen", "wither"]],
+ ["hemorrhage","Hemorrhage",3,"Bleeding \u00d72 + Strength",["bleeding", "v_strength"]],
+ ["vulnerability","Vulnerability",2,"Hunger + Weakness",["hunger", "v_weakness"]],
+ ["sapping","Sapping",2,"Mining Fatigue \u00d72 + Weakness",["mining_fatigue", "v_weakness"]],
+ ["frostbite","Frostbite",4,"Frost Brand + Permafrost",["frost_brand", "permafrost"]],
+ ["treachery","Treachery",3,"Vertigo + Harming",["vertigo", "v_harming"]],
+ ["execution","Execution",4,"Berserk + Harming",["berserk", "v_harming"]],
+ ["ambush","Ambush",3,"Shadowmeld + Keen",["shadowmeld", "keen"]],
+ ["rupture","Rupture",3,"Hydrophobia + Harming",["hydrophobia", "v_harming"]],
+ ["pain_link","Pain Link",4,"Lifesteal + Harming",["lifesteal", "v_harming"]],
+ ["blight","Blight",2,"Hunger + Wither",["hunger", "wither"]],
+ ["wildfire","Wildfire",4,"Ignite Touch + Harming",["ignite_touch", "v_harming"]],
+ ["cordyceps","Cordyceps",1,"Oozing + Sprout",["v_oozing","sprout"]],
+ ["detonation","Detonation",3,"Volatile + Highly Flammable",["volatile", "highly_flammable"]],
+ ["infestation","Infestation",4,"Infested + Tiny",["v_infested","tiny"]],
+ ["necromancy","Necromancy",4,"Bone Bound + Regeneration",["bone_bound", "v_regeneration"]],
+ ["frost_nova","Frost Nova",4,"Frost Brand + Chilly",["frost_brand", "chilly"]],
+ ["rampage","Rampage",4,"Berserk + Adrenaline",["berserk", "adrenaline"]],
+ ["shadow_dance","Shadow Dance",5,"Shadowmeld + Hollow Step",["shadowmeld", "hollow_step"]],
+ ["soul_wisps","Soul Wisps",4,"Cordyceps + Harming",["cordyceps","v_harming"]],
+ ["foraging","Foraging",0,"Brew: Awkward + Sweet Berries",["v_awkward"]],
+ ["prospecting","Prospecting",4,"Scavenger + Molten Pick",["scavenger", "molten_pick"]],
+ ["ambrosia","Ambrosia",5,"Lifeline + Last Stand",["lifeline","last_stand"]],
+ ["warding","Warding",4,"Goat Launch + Luck",["goat_launch", "v_luck"]],
+ ["deflection","Deflection",4,"Backlash + Breeze Blessing",["backlash","breeze_blessing"]],
+ ["evasion","Evasion",4,"Rift Step + Luck",["rift_step", "v_luck"]],
+ ["rally","Rally",4,"Lifesteal + Regeneration",["lifesteal", "v_regeneration"]],
+ ["backlash","Backlash",4,"Static + Riposte Charge",["static", "riposte_charge"]],
+ ["lifeline","Lifeline",2,"Health Boost + Healing",["health_boost", "v_healing"]],
+ ["soul_anchor","Soul Anchor",5,"Last Stand + Anchor Recall",["last_stand", "anchor_recall"]],
+ ["cloud_walker","Cloud Walker",4,"Glide + Levitation",["glide","levitation"]],
+ ["homeward","Homeward",4,"Anchor Recall + Regeneration",["anchor_recall", "v_regeneration"]],
+ ["soaked","Soaked",2,"Buoyancy + Water \u00d72",["buoyancy", "v_water"]],
+ ["polymorph","Polymorph",4,"Mob Mask + Shrink",["mob_mask", "shrink"]],
+ ["wild_polymorph","Wild Polymorph",5,"Polymorph + Kaleidoscope",["polymorph", "kaleidoscope"]],
+ ["charm","Charm",5,"Allure + Trade Tongue",["allure","trade_tongue"]],
+ ["truce","Truce",4,"Slumber + Weakness",["slumber", "v_weakness"]],
+ ["allure","Allure",2,"Saturation + Regeneration",["saturation", "v_regeneration"]],
+ ["tranquility","Tranquility",3,"Hibernate + Weakness",["hibernate", "v_weakness"]],
+ ["bloodmoon","Bloodmoon",5,"Evil Omen + Wakefulness",["evil_omen","wakefulness"]],
+ ["sonar","Sonar",3,"Echolocation + Water",["echolocation", "v_water"]],
+ ["wakefulness","Wakefulness",2,"Clarity + Night Vision",["clarity", "v_night_vision"]],
+ ["gambit","Gambit",3,"Vertigo + Luck",["vertigo", "v_luck"]],
+ ["treasure_lure","Treasure Lure",1,"Angling + Tidewalker",["angling","tidewalker"]],
+ ["angling","Angling",1,"Water Breathing + Luck",["v_water_breathing", "v_luck"]],
+ ["inspiration","Inspiration",2,"Clarity \u00d72 + Regeneration",["clarity", "v_regeneration"]],
+ ["penance","Penance",3,"Glass Cannon + Inspiration",["glass_cannon", "inspiration"]],
+ ["gluttony","Gluttony",2,"Saturation + Hunger",["saturation", "hunger"]],
+ ["iron_stomach","Iron Stomach",2,"Hunger + Poison",["hunger", "v_poison"]],
+ ["cat_eyes","Cat Eyes",3,"Haze + Night Vision",["haze", "v_night_vision"]],
+ ["enigma","Enigma",3,"Block Mirage + Luck",["block_mirage", "v_luck"]],
+ ["tipsy","Tipsy",0,"Brew: Awkward + Wheat",["v_awkward"]],
+ ["warmth","Warmth",0,"Brew: Awkward + Magma Block",["v_awkward"]],
+ ["titanic","Titanic",3,"Giant + Whirlwind",["giant", "whirlwind"]],
+ ["alkahest","Philosopher's Bane",4,"Acid + Silk Hands",["acid", "silk_hands"]],
+ ["calcination","Calcination",2,"Combustion + Warmth",["combustion", "warmth"]],
+ ["carbonization","Carbonization",4,"Calcination + Verdance",["calcination", "verdance"]],
+ ["transmutation","Transmutation",5,"Phase Miner + Luck",["phase_miner", "v_luck"]],
+ ["separatium","Separatium",5,"Philosopher's Bane + Transmutation",["alkahest","transmutation"]],
+ ["mimicium","Mimicium",5,"Philosopher's Bane + Doppelgänger",["alkahest","doppelganger"]],
+ ["collapsium","Collapsium",5,"Philosopher's Bane + Polymorph",["alkahest","polymorph"]],
+ ["sculk_sense","Sculk Sense",4,"Sculk Creep + Echolocation",["sculk_creep", "echolocation"]],
+ ["antimagic","Antimagic",5,"Time Dilation + Clarity",["time_dilation", "clarity"]],
+ ["sturdy","Sturdy",0,"Brew: Awkward + Iron Nugget",["v_awkward"]],
+ ["keen","Keen",0,"Brew: Awkward + Flint",["v_awkward"]],
+ ["static","Static",0,"Brew: Awkward + Copper Ingot",["v_awkward"]],
+ ["windfall","Windfall",0,"Brew: Awkward + Feather",["v_awkward"]],
+ ["breeze_step","Breeze Step",0,"Wind Charged + Leaping",["v_wind_charged","v_leaping"]],
+ ["chilly","Chilly",0,"Brew: Awkward + Snowball",["v_awkward"]],
+ ["sprout","Sprout",0,"Brew: Awkward + Bone Meal",["v_awkward"]],
+ ["erode","Erode",0,"Brew: Awkward + Sand",["v_awkward"]],
+ ["dredger","Dredger",0,"Brew: Awkward + Prismarine Shard",["v_awkward"]],
+ ["tidewalker","Tidewalker",0,"Brew: Awkward + Lily Pad",["v_awkward"]],
+ ["nausea","Nausea",1,"Water×3 + Poison",["v_water","v_poison"]],
+ ["absorption","Absorption",1,"Healing + Strength",["v_healing","v_strength"]],
+ ["brittle","Brittle",1,"Harming + Weakness",["v_harming","v_weakness"]],
+ ["buoyancy","Buoyancy",1,"Water Breathing + Leaping",["v_water_breathing","v_leaping"]],
+ ["clarity","Clarity",1,"Night Vision + Water×2",["v_night_vision","v_water"]],
+ ["darkness","Darkness",1,"Invisibility×2 + Water",["v_invisibility","v_water"]],
+ ["dolphins_grace","Dolphin's Grace",1,"Water Breathing×2 + Swiftness",["v_water_breathing","v_swiftness"]],
+ ["glowing","Glowing",1,"Night Vision×2 + Water",["v_night_vision","v_water"]],
+ ["grow","Grow",1,"Strength×2 + Healing",["v_strength","v_healing"]],
+ ["giant","Giant",2,"Grow + Strength",["grow","v_strength"]],
+ ["haste","Haste",1,"Swiftness×2 + Strength",["v_swiftness","v_strength"]],
+ ["health_boost","Health Boost",1,"Regeneration×2 + Strength",["v_regeneration","v_strength"]],
+ ["heavy","Heavy",1,"Slowness×2 + Harming",["v_slowness","v_harming"]],
+ ["hunger","Hunger",1,"Poison×2 + Weakness",["v_poison","v_weakness"]],
+ ["levitation","Levitation",1,"Leaping×2 + Slow Falling",["v_leaping","v_slow_falling"]],
+ ["mining_fatigue","Mining Fatigue",1,"Slowness×2 + Weakness",["v_slowness","v_weakness"]],
+ ["resistance","Resistance",1,"Strength×2 + Slowness",["v_strength","v_slowness"]],
+ ["saturation","Saturation",1,"Healing + Regeneration",["v_healing","v_regeneration"]],
+ ["shrink","Shrink",1,"Weakness + Water×3",["v_weakness","v_water"]],
+ ["tiny","Tiny",2,"Shrink + Strength",["shrink","v_strength"]],
+ ["weightless","Weightless",1,"Slow Falling×2 + Leaping",["v_slow_falling","v_leaping"]],
+ ["wither","Wither",1,"Poison×2 + Harming",["v_poison","v_harming"]],
+ ["phasing","Phasing",1,"Invisibility + Swiftness",["v_invisibility","v_swiftness"]],
+ ["slippery","Slippery",1,"Swiftness×3 + Harming",["v_swiftness","v_harming"]],
+ ["cliffgrip","Cliffgrip",1,"Leaping + Slowness",["v_leaping","v_slowness"]],
+ ["icy_tread","Icy Tread",1,"Chilly + Slowness",["chilly","v_slowness"]],
+ ["combustion","Combustion",1,"Warmth + Harming",["warmth","v_harming"]],
+ ["whirlwind","Whirlwind",1,"Keen + Strength",["keen","v_strength"]],
+ ["glass_cannon","Glass Cannon",1,"Strength + Brittle",["v_strength","brittle"]],
+ ["photosynthesis","Photosynthesis",1,"Sprout + Regeneration",["sprout","v_regeneration"]],
+ ["bloomlight","Bloomlight",1,"Glowing + Sprout",["glowing","sprout"]],
+ ["acclimated","Acclimated",1,"Chilly + Warmth",["chilly","warmth"]],
+ ["permafrost","Permafrost",2,"Chilly + Icy Tread",["chilly","icy_tread"]],
+ ["weaken_soil","Weaken Soil",1,"Erode + Water",["erode","v_water"]],
+ ["cave_sense","Cave Sense",2,"Night Vision + Water + Nausea",["v_night_vision","v_water","nausea"]],
+ ["lifesteal","Lifesteal",2,"Regeneration + Absorption + Harming×2",["v_regeneration","absorption","v_harming"]],
+ ["shadowmeld","Shadowmeld",2,"Invisibility + Darkness",["v_invisibility","darkness"]],
+ ["hibernate","Hibernate",2,"Photosynthesis + Slowness",["photosynthesis","v_slowness"]],
+ ["resonant","Resonant",2,"Heavy + Night Vision",["heavy","v_night_vision"]],
+ ["goat_launch","Goat Launch",2,"Whirlwind + Leaping",["whirlwind","v_leaping"]],
+ ["quicksilver","Quicksilver",2,"Slippery + Swiftness",["slippery","v_swiftness"]],
+ ["vertigo","Vertigo",2,"Nausea + Weakness + Poison",["nausea","v_weakness","v_poison"]],
+ ["hydrophobia","Hydrophobia",2,"Soaked + Wither",["soaked","wither"]],
+ ["sunburn","Sunburn",2,"Wither + Fire Resistance",["wither","v_fire_resistance"]],
+ ["blindness","Blindness",2,"Darkness + Invisibility",["darkness","v_invisibility"]],
+ ["gills","Gills",1,"Dredger + Tidewalker",["dredger","tidewalker"]],
+ ["longarm","Long Arm",2,"Grow + Strength",["grow","v_strength"]],
+ ["corrosion","Corrosion",2,"Erode + Wither + Poison",["erode","wither","v_poison"]],
+ ["drill","Drill",2,"Haste + Strength",["haste","v_strength"]],
+ ["bulwark","Bulwark",2,"Sturdy + Fire Resistance",["sturdy","v_fire_resistance"]],
+ ["haze","Haze",2,"Nausea + Water×2 + Slowness",["nausea","v_water","v_slowness"]],
+ ["hallucination","Hallucination",2,"Nausea + Invisibility",["nausea","v_invisibility"]],
+ ["inversion","Inversion",2,"Levitation + Nausea",["levitation","nausea"]],
+ ["volatile","Volatile",2,"Combustion + Wither",["combustion","wither"]],
+ ["bury","Bury",2,"Phasing + Heavy",["phasing","heavy"]],
+ ["delve","Delve",3,"Bury + Weaken Soil",["bury","weaken_soil"]],
+ ["hunted","Hunted",2,"Glowing + Wither + Harming",["glowing","wither","v_harming"]],
+ ["green_thumb","Green Thumb",2,"Sprout + Saturation",["sprout","saturation"]],
+ ["adrenaline","Adrenaline",2,"Glass Cannon + Health Boost + Swiftness",["glass_cannon","health_boost","v_swiftness"]],
+ ["second_wind","Second Wind",2,"Absorption + Resistance + Regeneration",["absorption","resistance","v_regeneration"]],
+ ["anchor_recall","Anchor Recall",2,"Phasing + Glowing + Slowness",["phasing","glowing","v_slowness"]],
+ ["momentum","Momentum",3,"Long Jump + Leaping",["long_jump","v_leaping"]],
+ ["rift_step","Rift Step",2,"Phasing + Swiftness",["phasing","v_swiftness"]],
+ ["silent_step","Silent Step",2,"Weightless + Invisibility",["weightless","v_invisibility"]],
+ ["petrify","Petrify",2,"Heavy + Resistance",["heavy","resistance"]],
+ ["phosphor","Phosphor",2,"Glowing + Strength",["glowing","v_strength"]],
+ ["antigravity","Antigravity",2,"Weightless + Levitation",["weightless","levitation"]],
+ ["slumber","Slumber",3,"Blindness + Vacuum",["blindness","vacuum"]],
+ ["highly_flammable","Highly Flammable",2,"Volatile + Combustion",["volatile","combustion"]],
+ ["vacuum","Vacuum",2,"Wither + Weakness + Harming",["wither","v_weakness","v_harming"]],
+ ["acid","Acid",2,"Weaken Soil + Strength",["weaken_soil","v_strength"]],
+ ["fake_low_health","Fake Wound",3,"Hallucination + Harming",["hallucination","v_harming"]],
+ ["inventory_mirage","Sleight",3,"Hallucination + Weakness",["hallucination","v_weakness"]],
+ ["block_mirage","Mirage",3,"Hallucination + Nausea",["hallucination","nausea"]],
+ ["brittle_touch","Brittle Touch",3,"Drill + Harming",["drill","v_harming"]],
+ ["molten_pick","Molten Pick",3,"Drill + Warmth",["drill","warmth"]],
+ ["echolocation","Echolocation",3,"Cave Sense + Glowing + Nausea",["cave_sense","glowing","nausea"]],
+ ["stoneskin","Stoneskin",3,"Bulwark + Sturdy",["bulwark","sturdy"]],
+ ["conduit_blessing","Conduit Blessing",2,"Dolphin's Grace + Gills + Glowing",["dolphins_grace","gills","glowing"]],
+ ["deep_delver","Deep Delver",3,"Drill + Slowness",["drill","v_slowness"]],
+ ["colorblind","Colorblind",3,"Nausea + Blindness",["nausea","blindness"]],
+ ["overclock","Overclock",3,"Mining Fatigue + Haste",["mining_fatigue","haste"]],
+ ["greedy_pick","Greedy Pick",3,"Drill + Luck",["drill","v_luck"]],
+ ["creeper_vision","Creeper Vision",3,"Hallucination + Poison",["hallucination","v_poison"]],
+ ["mob_mask","Mob Mask",3,"Hallucination + Invisibility",["hallucination","v_invisibility"]],
+ ["veil","Veil",4,"Shadowmeld + Hallucination",["shadowmeld","hallucination"]],
+ ["verdance","Verdance",3,"Green Thumb + Water",["green_thumb","v_water"]],
+ ["sculk_creep","Sculk Creep",3,"Hunted + Darkness + Resonant",["hunted","darkness","resonant"]],
+ ["vein_sense","Vein Sense",4,"Echolocation + Drill",["echolocation","drill"]],
+ ["hotbar_shuffle","Hotbar Shuffle",4,"Sleight + Nausea",["inventory_mirage","nausea"]],
+ ["phase_miner","Phase Miner",4,"Drill + Phasing",["drill","phasing"]],
+ ["storm_caller","Storm Caller",4,"Breeze Bound + Conduit Blessing",["breeze_bound","conduit_blessing"]],
+ ["magma_walker","Magma Walker",4,"Icy Tread + Acclimated",["icy_tread","acclimated"]],
+ ["spider_climb","Spider Climb",4,"Weaving + Mantle",["v_weaving","mantle"]],
+ ["slime_form","Slime Form",4,"Cliffgrip + Buoyancy",["cliffgrip","buoyancy"]],
+ ["solar_flare","Solar Flare",4,"Phosphor + Combustion",["phosphor","combustion"]],
+ ["time_dilation","Time Dilation",4,"Overclock + Quicksilver",["overclock","quicksilver"]],
+ ["blink","Blink",4,"Phasing + Rift Step",["phasing","rift_step"]],
+ ["ender_tether","Ender Tether",4,"Phasing + Anchor Recall",["phasing","anchor_recall"]],
+ ["hollow_step","Hollow Step",4,"Silent Step + Shadowmeld",["silent_step","shadowmeld"]],
+ ["evil_omen","Evil Omen",4,"Hunted + Resonant",["hunted","resonant"]],
+ ["trade_tongue","Trade Tongue",4,"Clarity + Luck",["clarity","v_luck"]],
+ ["doppelganger","Doppelgänger",4,"Mob Mask + Sleight",["mob_mask","inventory_mirage"]],
+ ["blockform","Blockform",4,"Mob Mask + Mirage",["mob_mask","block_mirage"]],
+ ["riptide_strike","Riptide Strike",4,"Whirlwind×2 + Conduit Blessing",["whirlwind","conduit_blessing"]],
+ ["vampiric_aura","Vampiric Aura",3,"Lifesteal + Hunted",["lifesteal","hunted"]],
+ ["berserk","Berserk",3,"Adrenaline + Momentum",["adrenaline","momentum"]],
+ ["riposte_charge","Riposte Charge",3,"Sturdy + Keen",["sturdy","keen"]],
+ ["frost_brand","Frost Brand",3,"Chilly + Keen",["chilly","keen"]],
+ ["ignite_touch","Ignite Touch",3,"Combustion + Keen",["combustion","keen"]],
+ ["chain_strike","Chain Strike",4,"Conduit Blessing + Static×2",["conduit_blessing","static"]],
+ ["vein_miner","Vein Miner",3,"Drill + Erode",["drill","erode"]],
+ ["tunnel_bore","Tunnel Bore",3,"Drill + Longarm",["drill","longarm"]],
+ ["silk_hands","Silk Hands",3,"Drill + Clarity",["drill","clarity"]],
+ ["treasure_sense","Treasure Sense",4,"Treasure Lure + Cave Sense",["treasure_lure","cave_sense"]],
+ ["fortune_vein","Fortune Vein",4,"Greedy Pick + Vein Sense",["greedy_pick","vein_sense"]],
+ ["breeze_blessing","Breeze Blessing",3,"Breeze Step + Quicksilver",["breeze_step","quicksilver"]],
+ ["wall_run","Wall Run",3,"Cliffgrip + Swiftness",["cliffgrip","v_swiftness"]],
+ ["glide","Glide",3,"Weightless + Windfall",["weightless","windfall"]],
+ ["bunnyhop","Bunnyhop",3,"Slime Form + Momentum",["slime_form","momentum"]],
+ ["shieldskin","Shieldskin",4,"Stoneskin + Second Wind",["stoneskin","second_wind"]],
+ ["last_stand","Last Stand",4,"Second Wind + Bulwark",["second_wind","bulwark"]],
+ ["kaleidoscope","Kaleidoscope",3,"Colorblind + Hallucination",["colorblind","hallucination"]],
+ ["gravity_flux","Gravity Flux",4,"Inversion + Antigravity",["inversion","antigravity"]],
+ ["hotpotato","Hot Potato",4,"Volatile + Momentum",["volatile","momentum"]],
+ ["auto_replant","Auto-Replant",3,"Green Thumb + Drill",["green_thumb","drill"]],
+ ["lumberjack","Lumberjack",3,"Drill + Sprout",["drill","sprout"]],
+ ["ground_pound","Ground Pound",3,"Heavy + Goat Launch",["heavy","goat_launch"]],
+ ["long_jump","Long Jump",2,"Weightless + Leaping",["weightless","v_leaping"]],
+ ["mantle","Mantle",3,"Cliffgrip + Strength",["cliffgrip","v_strength"]],
+ ["swim_dash","Swim Dash",3,"Dolphin's Grace + Quicksilver",["dolphins_grace","quicksilver"]],
+ ["scavenger","Scavenger",1,"Foraging ×2 + Luck",["foraging","v_luck"]],
+ ["breeze_bound","Breeze Bound",3,"Oozing + Breeze Step",["v_oozing","breeze_step"]],
+ ["blaze_bound","Blaze Bound",3,"Cordyceps + Sunburn",["cordyceps","sunburn"]],
+ ["bone_bound","Bone Bound",3,"Infested + Brittle",["v_infested","brittle"]],
+ ["creeper_bound","Creeper Bound",3,"Infestation + Hunted",["infestation","hunted"]],
+];
+
+// Base vanilla potions + water, informational only (not part of the addon, not tracked).
+// Same node shape as above but tier "V"; rendered in their own labeled, lighter section.
+const VANILLA=[
+ ["v_water","Water","V","Vanilla: fill a Glass Bottle at water or a cauldron",[]],
+ ["v_awkward","Awkward Potion","V","Vanilla: Water + Nether Wart (base for most potions)",["v_water"]],
+ ["v_strength","Strength","V","Vanilla: Awkward + Blaze Powder",["v_awkward"]],
+ ["v_swiftness","Swiftness","V","Vanilla: Awkward + Sugar",["v_awkward"]],
+ ["v_slowness","Slowness","V","Vanilla: Swiftness or Leaping + Fermented Spider Eye",["v_swiftness"]],
+ ["v_leaping","Leaping","V","Vanilla: Awkward + Rabbit's Foot",["v_awkward"]],
+ ["v_healing","Healing","V","Vanilla: Awkward + Glistering Melon Slice",["v_awkward"]],
+ ["v_harming","Harming","V","Vanilla: Healing or Poison + Fermented Spider Eye",["v_healing"]],
+ ["v_poison","Poison","V","Vanilla: Awkward + Spider Eye",["v_awkward"]],
+ ["v_regeneration","Regeneration","V","Vanilla: Awkward + Ghast Tear",["v_awkward"]],
+ ["v_fire_resistance","Fire Resistance","V","Vanilla: Awkward + Magma Cream",["v_awkward"]],
+ ["v_water_breathing","Water Breathing","V","Vanilla: Awkward + Pufferfish",["v_awkward"]],
+ ["v_night_vision","Night Vision","V","Vanilla: Awkward + Golden Carrot",["v_awkward"]],
+ ["v_invisibility","Invisibility","V","Vanilla: Night Vision + Fermented Spider Eye",["v_night_vision"]],
+ ["v_weakness","Weakness","V","Vanilla: Water + Fermented Spider Eye",["v_water"]],
+ ["v_turtle_master","Turtle Master","V","Vanilla: Awkward + Turtle Shell",["v_awkward"]],
+ ["v_slow_falling","Slow Falling","V","Vanilla: Awkward + Phantom Membrane",["v_awkward"]],
+ ["v_luck","Luck","V","Vanilla: creative-only (no brewing recipe)",[]],
+ ["v_wind_charged","Wind Charged","V","Vanilla: Awkward + Breeze Rod",["v_awkward"]],
+ ["v_oozing","Oozing","V","Vanilla: Awkward + Slime Block",["v_awkward"]],
+ ["v_weaving","Weaving","V","Vanilla: Awkward + Cobweb",["v_awkward"]],
+ ["v_infested","Infested","V","Vanilla: Awkward + Stone",["v_awkward"]],
+];
+
+// key -> {cat, kind, p(layer), m(ob), e(nvironment)}
+const D="none";
+const INFO={
+ thermite:{cat:"combat",kind:"",p:"Fire damage water can't put out, and pooled thermite melts straight down through stone.",m:"A metal fire that water can't stop.",e:"Melts down through stone. Pooled thermite burns a shaft."},
+ phantom_legion:{cat:"vision",kind:"",p:"You project ghostly copies of yourself that other players glimpse flanking you at a distance. You see nothing.",m:"Other players glimpse a phantom legion around it.",e:D},
+ moon_gravity:{cat:"movement",kind:"",p:"Reduced gravity, boosted jumps, and reduced fall damage.",m:"Same low gravity.",e:D},
+ medusa_gaze:{cat:"combat",kind:"Tick",p:"Keep a mob centered in your view for ~1.5s and it petrifies. Look away and its progress resets.",m:"Same, a gazing mob can petrify you.",e:D},
+ monument:{cat:"survival",kind:"Tick",p:"Hold crouch to become stone, fully damage immune and rooted, self casting Petrify. Stand up to return.",m:"Same for an affected mob.",e:D},
+ quicksand:{cat:"curse",kind:"Tick + collision",p:"Sand and gravel stop holding the afflicted up, they sink slowly in, mired by slowness. Once their eyes go under they can't see out.",m:"Same.",e:"Sinks the afflicted into sand and gravel."},
+ harmless:{cat:"curse",kind:"Event",p:"The afflicted deals no damage while it lasts, Sapping taken to zero.",m:"Same.",e:D},
+ enervate:{cat:"curse",kind:"Attribute + tick",p:"The afflicted attacks, mines, and moves far slower, on top of dealing reduced damage.",m:"Same.",e:D},
+ demoralize:{cat:"curse",kind:"Event \u00b7 aura",p:"Any attacker standing within 10 blocks of a demoralized foe deals 40% less damage.",m:"Same aura.",e:D},
+ contagion:{cat:"curse",kind:"Tick + events",p:"Slow damage over time. On the host's death it jumps to everything within 10 blocks, and the host's own melee hits infect the target.",m:"Same, a self spreading epidemic.",e:D},
+ faewild:{cat:"environment",kind:"World area",p:"Touched ground blooms into a glowing garden that heals whatever stands in it.",m:"Same aura.",e:"Blooms a glowing, healing garden underfoot."},
+ ravenous:{cat:"combat",kind:"Event \u00b7 players",p:"Melee damage rises as your hunger bar empties, with no bonus when full and the maximum bonus near starvation.",m:"No effect.",e:D},
+ sated:{cat:"survival",kind:"Event \u00b7 players",p:"Incoming damage drops the fuller you are, up to ~45% at a full belly, and rises ~15% when you're starving.",m:"No effect.",e:D},
+ telekinesis:{cat:"utility",kind:"Attribute",p:"Your block and entity reach extend past 20 blocks. Mine, place, use and attack across the room.",m:"Same reach for an affected mob.",e:D},
+ bloomlight:{cat:"environment",kind:"World area",p:"Living light follows you, glow lichen on land, sea pickles underwater.",m:"Same aura.",e:"Sprouts glow lichen and sea pickles for permanent natural light."},
+ grappler:{cat:"combat",kind:"Event \u00b7 unarmed",p:"An empty handed hit pulls the target across the ground to your feet and lifts it up, keeping it in fist range.",m:"Same. A mob pulls you in and keeps you close.",e:D},
+ stunning_fist:{cat:"combat",kind:"Event \u00b7 unarmed",p:"Each bare knuckle blow builds up on the target. A few in quick succession root it and stop it attacking for a moment, then the buildup resets.",m:"Same, a stunning fist mob can lock you down.",e:D},
+ iron_body:{cat:"combat",kind:"Event \u00b7 unarmed",p:"Fists deal +2 damage and you take \u221210% damage for every empty armor slot, peaking with no armor worn.",m:"Same scaling for an affected mob.",e:D},
+ counter:{cat:"combat",kind:"Event \u00b7 unarmed",p:"Empty handed and facing the attacker, you have a high chance to catch a melee hit outright, take no damage, and deal the same amount straight back.",m:"Same, a countering mob reflects your swings.",e:D},
+ haymaker:{cat:"combat",kind:"Event \u00b7 unarmed",p:"A punch thrown while sprinting deals more damage and knockback, scaled by your run up speed. Maximum knockback at full sprint, none standing still.",m:"Same. A charging mob sends you flying.",e:D},
+ brawler:{cat:"combat",kind:"Attribute + event",p:"With an empty hand your punches deal weapon level damage, land with strong knockback, and have a chance to knock the item out of a foe's hand. Swings are faster too.",m:"Same, an empty handed mob deals weapon level unarmed hits.",e:D},
+ magnetized:{cat:"utility",kind:"Tick · server",p:"Dropped items and experience orbs within 8 blocks fly to you.",m:"Same, a magnetized mob picks up loose drops.",e:D},
+ gallop:{cat:"movement",kind:"Tick \u00b7 rider held",p:"Rider held: while mounted, your mount gains +40% speed, stronger jumps, and +1 step height. No need to splash the horse.",m:"A mob holding it moves the same way. A ridden mount benefits whenever its rider has it.",e:D},
+ trample:{cat:"combat",kind:"Tick \u00b7 rider held",p:"While sprinting or galloping, entities in your path are damaged and knocked aside, scaled by your speed. Held by the rider, performed by the mount.",m:"A splashed hostile damages and scatters entities in its path while charging.",e:"Tramples crops and fragile growth it runs over."},
+ bonded:{cat:"utility",kind:"Tick + events \u00b7 rider held",p:"Every other effect you carry mirrors onto your mount while you ride, your splash potions can't harm it, and fall damage is shared and reduced.",m:"Mobs bond with their own riders the same way.",e:D},
+ pack_leader:{cat:"combat",kind:"Tick aura \u00b7 owner held",p:"Your tamed animals within 16 blocks gain +50% damage, +30% speed and Resistance 1, and glow.",m:"Charmed allies count as pack too.",e:D},
+ kinship:{cat:"utility",kind:"Events + tick \u00b7 owner held",p:"Your attacks, including sword sweeps, can no longer hurt your own pets. Pets near you regenerate slowly.",m:"Same for any owner.",e:D},
+ fetch:{cat:"utility",kind:"Tick \u00b7 owner held",p:"Owner held: your pets pick up item drops near them and carry them to you.",m:"Same for any owner.",e:D},
+ beckon:{cat:"utility",kind:"Apply + tick \u00b7 owner held",p:"On drink, every pet you own and your last ridden mount teleports to your side. For the duration they stay close instead of wandering.",m:"Same for any owner.",e:D},
+ doom:{cat:"combat",kind:"Effect expiry event",p:"Marked: 1.5s after the last application, a single large damage burst detonates on you.",m:"Same, re hitting refreshes the fuse. It never stacks.",e:D},
+ sundering:{cat:"combat",kind:"Attribute",p:"\u22126 armor while afflicted.",m:"Same.",e:D},
+ bleeding:{cat:"combat",kind:"Tick \u00b7 server",p:"A stacking bleed that ticks armor bypassing damage. Each fresh application adds a stack.",m:"Same.",e:D},
+ hemorrhage:{cat:"combat",kind:"Instant",p:"On contact, every damaging affliction on the target, Poison, Wither, Bleeding, Doom, has its remaining duration doubled.",m:"Same.",e:D},
+ vulnerability:{cat:"curse",kind:"Damage event",p:"You take +50% damage from every source.",m:"Same.",e:D},
+ sapping:{cat:"curse",kind:"Damage event",p:"You deal \u221230% damage from every source.",m:"Same.",e:D},
+ frostbite:{cat:"combat",kind:"Tick + damage event",p:"Each application stacks chill. At five stacks you freeze solid, and the next melee hit shatters for \\u00d72.5 damage and ends the freeze.",m:"Same.",e:D},
+ treachery:{cat:"curse",kind:"Tick \u00b7 server",p:"As a victim you can't be re-targeted by charmed behavior. Afflicted mobs turn on each other.",m:"Afflicted mobs re-target the nearest other hostile for 20s.",e:D},
+ execution:{cat:"combat",kind:"Attack event",p:"Your hits instantly kill non boss targets already below 15% max health.",m:"A mob with it executes its targets the same way.",e:D},
+ ambush:{cat:"combat",kind:"Attack event",p:"+75% damage against targets at full health. No bonus once they take damage.",m:"Same.",e:D},
+ rupture:{cat:"curse",kind:"Tick \u00b7 server",p:"You take damage only while moving. Stand still and the wound rests.",m:"Fleeing mobs bleed. Holding still is safe.",e:D},
+ pain_link:{cat:"curse",kind:"Damage event",p:"Linked to the applier: damage they take is mirrored onto you for 20s.",m:"Splash a mob to link it to your own damage.",e:D},
+ blight:{cat:"curse",kind:"Heal event",p:"Every heal you receive lands as damage instead.",m:"Same.",e:D},
+ wildfire:{cat:"combat",kind:"Death event",p:"Your kills ignite every hostile within four blocks.",m:"Same for an afflicted mob's kills.",e:"Fire spreads only to entities, not blocks."},
+ cordyceps:{cat:"environment",kind:"Death event + gas seed",p:"Mobs you kill sprout mushrooms at the corpse spot that puff small poison clouds for a while.",m:"Same.",e:"Mushrooms appear where victims die and periodically seed small poison gas clouds."},
+ detonation:{cat:"combat",kind:"Death event",p:"If you die while afflicted, you explode and blocks are spared.",m:"Splashed mobs explode on death, chaining across a crowd.",e:"Explosions hurt entities but never blocks."},
+ infestation:{cat:"combat",kind:"Death event",p:"Your kills spawn 2 to 3 allied silverfish that fight for you for 30s, then despawn.",m:"Same.",e:D},
+ necromancy:{cat:"combat",kind:"Death event",p:"Undead you kill, including zombies, skeletons, drowned, and zombified piglins, rise as friendly undead for 60s.",m:"Same.",e:D},
+ frost_nova:{cat:"combat",kind:"Death event",p:"Each kill radiates a chill ring: nearby mobs slowed, frost laid on the ground via the Permafrost path.",m:"Same.",e:"Kill sites frost over: snow dust, frozen water."},
+ rampage:{cat:"combat",kind:"Death + damage event",p:"Kill streaks build stacking bonus damage. Taking any hit zeroes the streak.",m:"Same.",e:D},
+ shadow_dance:{cat:"combat",kind:"Death event + client",p:"Each kill grants 10s of true invisibility with armor and particles hidden, and nearby mobs forget you. Attacking breaks stealth.",m:"Mobs gain the invisibility window too.",e:D},
+ soul_wisps:{cat:"combat",kind:"Death event + projectile",p:"Kills release two homing wisps that seek new hostile targets. Chain kills chain further.",m:"Same.",e:D},
+ foraging:{cat:"utility",kind:"Drops event",p:"Mobs you kill sometimes drop sticks, string, seeds, bone, and flint.",m:"Same.",e:D},
+ prospecting:{cat:"utility",kind:"Drops event",p:"Kills have a 5% chance to drop one of: coal, iron nugget, gold nugget, redstone, emerald, copper ingot, zinc nugget, andesite, diorite.",m:"Same.",e:D},
+ ambrosia:{cat:"survival",kind:"Damage event + tick",p:"80% damage resistance, but any liquid contact, water, rain, or a potion splash, removes it instantly.",m:"Same.",e:"Rain and water strip the coat on contact."},
+ warding:{cat:"survival",kind:"Damage event",p:"15% chance to completely negate any instance of damage, with a whiff sound.",m:"Same.",e:D},
+ deflection:{cat:"survival",kind:"Projectile event",p:"Incoming projectiles are cancelled and re fired back at the shooter.",m:"Reflects projectiles back at their shooters.",e:D},
+ evasion:{cat:"survival",kind:"Damage event",p:"When about to take a hit, 25% chance to blink six blocks sideways instead.",m:"Same.",e:D},
+ rally:{cat:"survival",kind:"Damage + attack event",p:"Half of damage taken is 'recoverable'. Melee hits landed within 6s refund it as healing.",m:"Same.",e:D},
+ backlash:{cat:"combat",kind:"Damage event",p:"Being hit shocks all enemies within six blocks, not just your attacker.",m:"Same.",e:D},
+ lifeline:{cat:"survival",kind:"Damage event \u00b7 one shot",p:"Inert until you drop below three hearts, then triggers strong healing plus brief Resistance, once per bottle.",m:"Same.",e:D},
+ soul_anchor:{cat:"survival",kind:"Death event \u00b7 checkpoint",p:"Drinking sets a death checkpoint. Die within ten minutes and you survive at one heart back at the drinking spot, consuming the effect.",m:"Works on mobs too, they revive at the anchor.",e:D},
+ cloud_walker:{cat:"movement",kind:"Tick + temp blocks",p:"Walking onto air condenses temporary solid cloud platforms underfoot. Crouch to fall through them.",m:"Same for mobs, airborne paths form under them.",e:"Temporary cloud blocks appear and fade on their own."},
+ homeward:{cat:"movement",kind:"Tick \u00b7 channel",p:"Crouch free 10s channel with circling particles, then teleport to your bed or world spawn. Any damage cancels it.",m:"Mobs channel to their spawn point.",e:D},
+ soaked:{cat:"environment",kind:"Damage event + state",p:"Drenched: +100% lightning damage taken, chills upgrade to full freezes, and total fire immunity.",m:"Same.",e:D},
+ polymorph:{cat:"curse",kind:"Transform",p:"You become a sheep for 30s and can still walk and jump. Your gear is preserved.",m:"Mobs are stored and replaced by a sheep, restored when it ends.",e:D},
+ wild_polymorph:{cat:"curse",kind:"Transform",p:"Same as Polymorph, but the result is random from a weighted pool.",m:"Gas version polymorphs the whole room.",e:D},
+ charm:{cat:"utility",kind:"Tick + behavior goals",p:"Affected mobs become allies. They fight hostiles near you, follow you, warp to you when stuck, and sit on command by interacting. Bosses resist.",m:"Charmed mobs glow friendly and stay loyal until they die.",e:D},
+ truce:{cat:"utility",kind:"Tick \u00b7 server",p:"Affected hostiles lose targeting entirely. Delivered as a gas.",m:"Same.",e:D},
+ allure:{cat:"utility",kind:"Tick \u00b7 server",p:"Breedable animals affected enter love mode.",m:"Same.",e:D},
+ tranquility:{cat:"utility",kind:"Spawn event",p:"About half of natural hostile spawn attempts near you are cancelled.",m:"Works around an afflicted mob too.",e:D},
+ bloodmoon:{cat:"environment",kind:"Spawn hook",p:"Natural hostile spawn attempts double within 64 blocks of you.",m:"Works around an afflicted mob too.",e:"More monsters everywhere nearby. Build accordingly."},
+ sonar:{cat:"utility",kind:"Fishing event",p:"While fishing, the actionbar announces what's on the hook before you reel.",m:"No effect on mobs.",e:D},
+ wakefulness:{cat:"utility",kind:"Apply event",p:"Resets your insomnia, no phantom spawns for several nights, and clears Darkness and Nausea on drink.",m:"Clears Darkness/Nausea from mobs.",e:D},
+ gambit:{cat:"utility",kind:"Drops events",p:"Every loot roll is either doubled or zeroed, a coin flip per event.",m:"Same.",e:D},
+ treasure_lure:{cat:"utility",kind:"Fishing hook",p:"Fishing treasure ratio doubled while active. Junk becomes rare.",m:"No effect on mobs.",e:D},
+ angling:{cat:"utility",kind:"Fishing hook",p:"Bites come faster and catch quality rises.",m:"No effect on mobs.",e:D},
+ inspiration:{cat:"utility",kind:"experience + anvil events",p:"Experience orbs are worth +50%. Anvil and enchanting costs reduced by three levels while active.",m:"No effect on mobs.",e:D},
+ penance:{cat:"utility",kind:"Damage event",p:"Taking damage grants experience orbs proportional to the hit.",m:"No effect on mobs.",e:D},
+ gluttony:{cat:"survival",kind:"Apply + attribute",p:"Instantly fills food and saturation, applies short Regeneration, and applies heavy Slowness for the duration.",m:"Applies Slowness and Regeneration.",e:D},
+ iron_stomach:{cat:"survival",kind:"Food event",p:"Rotten flesh, spider eyes, poison potatoes and suspicious stew are all harmless while active.",m:"No effect on mobs.",e:D},
+ cat_eyes:{cat:"vision",kind:"Tick + client",p:"Night vision, but entering bright light of level 12 or higher blinds you for three seconds.",m:"Mobs get no benefit or penalty.",e:D},
+ enigma:{cat:"utility",kind:"Apply event",p:"Grants two random strong effects and one random drawback, seeded per world day. Repeat brews are learnable within a session.",m:"Same.",e:D},
+ tipsy:{cat:"combat",kind:"Attribute + tick",p:"+70% melee damage, \u22124 armor, and a mild wobble to your step every few seconds.",m:"Same.",e:D},
+ warmth:{cat:"environment",kind:"Tick + contact",p:"You never freeze, ignore powder snow, Permafrost chill, and freeze damage, and snow and ice melt in a small aura around you.",m:"Same aura around an affected mob.",e:"Melts nearby snow &amp. Ice."},
+ titanic:{cat:"combat",kind:"Attribute",p:"Massive attack knockback.",m:"Same.",e:D},
+ alkahest:{cat:"environment",kind:"Block contact",p:"Blocks the fluid touches break into their ingredients, bricks to clay, concrete to sand and gravel, as dropped items.",m:"Entities take mild solvent damage.",e:"Un crafts touched blocks into ingredient item drops."},
+ separatium:{cat:"utility",kind:"Alchemy fluid",p:"In a tank it un-mixes the potion it contacts back into its unstable component ratio, such as Inversion into Nausea and Levitation. Splashed on you, each reaction-potion effect is replaced by its parent effects at the same duration.",m:"Same on mobs.",e:D},
+ mimicium:{cat:"utility",kind:"Alchemy fluid",p:"In a tank it copies the composition of the potion fluid it touches, becoming more of it. Splashed on you, it restores half the remaining duration of every active effect.",m:"Same on mobs.",e:D},
+ collapsium:{cat:"utility",kind:"Alchemy fluid",p:"In a tank it collapses a mixed potion down to a single randomly chosen component, and the whole tank becomes that one potion. Splashed on you, it keeps only one random active effect.",m:"Same on mobs.",e:D},
+ calcination:{cat:"environment",kind:"Block contact + death event",p:"Burns flora to bonemeal, smelts sand to glass and clay to terracotta on contact. Mobs killed by it drop their cooked drops.",m:"Kills by an afflicted mob drop cooked too.",e:"Flora\u2192bonemeal ash, sand\u2192glass, clay\u2192terracotta on contact."},
+ carbonization:{cat:"environment",kind:"Block contact",p:"Plants in the radius compress directly into coal and bonemeal yields.",m:"Same aura.",e:"Plants compress to coal + bonemeal."},
+ transmutation:{cat:"mining",kind:"Break event",p:"Broken copper ore and blocks may turn to iron at 10%, iron to gold at 5%, gold to diamond at 1%.",m:"No effect on mobs, mobs don't mine.",e:D},
+ sculk_sense:{cat:"environment",kind:"Block contact + tick",p:"Carpets the area in sensor veins that ping you with an actionbar message and sound and outline whatever crosses them. The veins crumble when the effect ends.",m:"Mobs crossing the carpet are highlighted.",e:"Sensor vein growth carpets surfaces, then breaks down when the effect ends."},
+ antimagic:{cat:"utility",kind:"Tick \u00b7 area",p:"Strips one active potion effect per second from everything inside, silences evoker and witch spellcasting, and as a gas nullifies potion effects applied in the area.",m:"Same.",e:"A null zone: effects fade, spells fail, potions don't take."},
+ sturdy:{cat:"combat",kind:"Attribute",p:"+2 armor and some knockback resistance.",m:"Same, tougher to stagger.",e:D},
+ keen:{cat:"combat",kind:"Attribute",p:"+15% attack speed.",m:"Same.",e:D},
+ static:{cat:"utility",kind:"Tick · server",p:"While you stand in water, shocks living things standing in nearby water, never on land.",m:"Same, a charged mob zaps swimmers.",e:D},
+ windfall:{cat:"movement",kind:"Attribute + event",p:"Cushions falls. A hard landing bursts a wind charge that scatters nearby entities & items.",m:"Same.",e:"The landing burst shoves loose items & mobs around."},
+ breeze_step:{cat:"movement",kind:"Client + attribute",p:"Mid air double jump. Jump again after a ground jump, or press jump while airborne, to pop a wind charge at your feet. No fall damage while active.",m:"No double jump, jump key driven, but the fall damage immunity still applies.",e:D},
+ chilly:{cat:"environment",kind:"World area",p:"Freezes the single water block at your feet to self melting ice and snuffs your own fire.",m:"Same for an affected mob.",e:"Freezes the one water block underfoot to self melting ice."},
+ sprout:{cat:"environment",kind:"World area",p:"Every 2s, bonemeals the one block column right in front of you, 2 tall.",m:"Same in front of the mob.",e:"Grows a single column of plants ahead."},
+ erode:{cat:"environment",kind:"World area · destructive",p:"An aura that weathers nearby blocks a step at a time: grass to dirt, stone to cobble to gravel to sand, leaves decay. Reverts if potion griefing is off.",m:"Same aura.",e:"Weathers blocks, grass→dirt, stone→cobble→gravel→sand, leaves decay. Reverts if potion griefing is off."},
+ dredger:{cat:"mining",kind:"Attribute",p:"Mine at full speed underwater, cancelling the 5x submerged mining penalty.",m:"Attribute applies, mobs don't mine.",e:D},
+ nausea:{cat:"curse",kind:"Vanilla",p:"Warps and rolls your whole screen for the duration.",m:"Applied, but mobs largely ignore it.",e:D},
+ absorption:{cat:"survival",kind:"Attribute",p:"Adds extra yellow absorption hearts above your health that soak damage first and don't regenerate.",m:"Same.",e:D},
+ brittle:{cat:"curse",kind:"Attribute",p:"Extra fall damage and flung farther by knockback.",m:"Same.",e:D},
+ buoyancy:{cat:"movement",kind:"Tick · client(player)/server(mob)",p:"You rise upward fast through water and lava instead of sinking.",m:"Rises through fluids, server side.",e:D},
+ clarity:{cat:"utility",kind:"Tick",p:"Cleanses trolls and afflictions: nausea, blindness, darkness, hallucination, sleight, mirage, color drain, hotbar shuffle, fake wound, foggy sense, mob mask, vertigo, inversion, poison, weakness, fatigue, and grants soft night vision.",m:"Same cleansing.",e:D},
+ darkness:{cat:"curse",kind:"Vanilla",p:"Pulses of near total black squeeze your view down to a tiny radius.",m:"Applied.",e:D},
+ dolphins_grace:{cat:"movement",kind:"Attribute",p:"Greatly increased swim speed.",m:"Same.",e:D},
+ glowing:{cat:"utility",kind:"Vanilla",p:"Outlines you or the target with a white glow that shows through walls and terrain.",m:"Outlined and visible through blocks.",e:D},
+ grow:{cat:"movement",kind:"Attribute",p:"Bigger body and a taller step.",m:"Bigger model and step.",e:D},
+ giant:{cat:"movement",kind:"Attribute",p:"A bigger Grow, 1.5\u00d7 the size and step height.",m:"Same, larger model and step.",e:D},
+ haste:{cat:"mining",kind:"Vanilla",p:"Mines blocks faster, block breaking speed climbs with each level.",m:"Attribute applies.",e:D},
+ health_boost:{cat:"survival",kind:"Attribute",p:"Grants extra maximum health hearts for the duration.",m:"Same.",e:D},
+ heavy:{cat:"curse",kind:"Attribute",p:"High gravity, sinks fast, weak jumps, extra fall damage.",m:"Same.",e:D},
+ hunger:{cat:"curse",kind:"Vanilla",p:"Drains your hunger and saturation far faster than normal.",m:"Applied.",e:D},
+ levitation:{cat:"movement",kind:"Vanilla",p:"Drifts you steadily upward into the air against gravity.",m:"Floats upward.",e:D},
+ mining_fatigue:{cat:"curse",kind:"Vanilla",p:"Slows your block breaking and swing speed.",m:"Attribute applies.",e:D},
+ resistance:{cat:"survival",kind:"Vanilla",p:"Reduces a flat amount of damage from every hit you take, more per level.",m:"Same.",e:D},
+ saturation:{cat:"survival",kind:"Vanilla",p:"Tops your hunger and saturation back up almost instantly.",m:"No effect.",e:D},
+ shrink:{cat:"movement",kind:"Attribute",p:"Smaller body, fits one block gaps.",m:"Smaller model.",e:D},
+ tiny:{cat:"movement",kind:"Attribute",p:"Twice the Shrink, a much smaller body that fits tighter gaps.",m:"Tiny model.",e:D},
+ weightless:{cat:"movement",kind:"Attribute",p:"Low gravity jumps.",m:"Same.",e:D},
+ wither:{cat:"curse",kind:"Vanilla + world area",p:"Decay that ticks damage straight through armor and blackens your health bar.",m:"Same DoT.",e:"Wilts foliage and sickens grass→dirt around the holder (aura)."},
+ phasing:{cat:"movement",kind:"Tick",p:"Every ~5s, blinks you to a random spot within \u00b130 blocks.",m:"Blinks the mob around.",e:D},
+ slippery:{cat:"movement",kind:"Mixin · friction",p:"Every block underfoot is slick, you slide on anything.",m:"Same, mobs skate around and can\u2019t turn.",e:D},
+ cliffgrip:{cat:"movement",kind:"Tick · client(player)/server(mob)",p:"Press against a wall in the air to cling, sliding down slowly instead of falling.",m:"Wall clings.",e:D},
+ icy_tread:{cat:"movement",kind:"World area",p:"Freezes water under your feet into self melting ice as you walk.",m:"Same under a mob.",e:"Lays self melting ice paths over water."},
+ combustion:{cat:"curse",kind:"Tick + world area",p:"You are set on fire.",m:"Same, the mob ignites.",e:"Lays fire on solid ground it touches / around the holder."},
+ whirlwind:{cat:"combat",kind:"Attribute",p:"Your melee sweep reaches wider and flings what you hit back much harder.",m:"Same.",e:D},
+ glass_cannon:{cat:"combat",kind:"Attribute + event",p:"Deal 2x melee damage, but take 2x damage.",m:"Same trade off.",e:D},
+ photosynthesis:{cat:"survival",kind:"Tick",p:"In open daylight, slowly regenerate health and refill hunger.",m:"Regenerates in daylight.",e:D},
+ acclimated:{cat:"survival",kind:"Attribute + tick",p:"Immune to powder snow freezing, soul sand slow, and biome cold.",m:"Same immunities.",e:D},
+ permafrost:{cat:"environment",kind:"World area + tick",p:"Slows you and causes frostbite damage.",m:"Same.",e:"Aggressively freezes water (even submerged sources to solid ice), snuffs fire, and piles stacking snow that compacts into snow blocks, rarely powder snow."},
+
+ weaken_soil:{cat:"environment",kind:"World area · destructive",p:"Soft blocks and soil in the area slowly crumble, a random tick mines them away over time.",m:"Same aura.",e:"Gradually breaks soft blocks/soil it touches (griefing gated)."},
+ cave_sense:{cat:"mining",kind:"Tick · self",p:"Nearby cave and cavern air pockets within about 16 blocks shimmer through stone.",m:"No effect.",e:D},
+ lifesteal:{cat:"combat",kind:"Event",p:"Heal 25% of the melee damage you deal.",m:"Same. A mob heals off you.",e:D},
+ shadowmeld:{cat:"utility",kind:"Tick",p:"In light level 7 or darker, nearby hostiles within about 24 blocks lose track of you.",m:"Nearby mobs lose track of the holder.",e:D},
+ hibernate:{cat:"survival",kind:"Tick",p:"Stand perfectly still to regenerate rapidly and stop losing hunger. Any movement cancels it.",m:"Regenerates while idle.",e:D},
+ resonant:{cat:"curse",kind:"Tick",p:"You constantly emit loud vibrations, drawing sculk sensors and the Warden straight to you.",m:"The mob constantly emits loud vibrations.",e:"Triggers nearby sculk sensors."},
+ goat_launch:{cat:"combat",kind:"Event",p:"When something hits you, a 50% chance to headbutt the attacker flying away.",m:"Same retaliation.",e:D},
+ quicksilver:{cat:"movement",kind:"Attribute",p:"1.5x movement speed boost.",m:"Same 1.5\u00d7 speed.",e:D},
+ vertigo:{cat:"curse",kind:"Tick · client(player)/server(mob)",p:"Nausea and random drift that steers your movement off course in shifting directions.",m:"Nausea and random drift.",e:D},
+ hydrophobia:{cat:"curse",kind:"Tick",p:"Standing in water or out in the rain steadily drains your health.",m:"Same.",e:D},
+ sunburn:{cat:"curse",kind:"Tick",p:"You catch fire whenever you're in direct daylight.",m:"Same.",e:D},
+ blindness:{cat:"curse",kind:"Vanilla",p:"Collapses your view to a small dark bubble and stops you sprinting.",m:"Applied.",e:D},
+ gills:{cat:"survival",kind:"Attribute + tick + client display",p:"Breathe, move, and mine freely underwater with no air bubbles. On land the bubble bar drains and you suffocate. Breathing is inverted.",m:"Same, thrives in water, dries out in air.",e:D},
+ longarm:{cat:"utility",kind:"Attribute",p:"Extends your reach by ~5 blocks for both breaking blocks and hitting/using entities.",m:"Reach attribute applies.",e:D},
+ corrosion:{cat:"curse",kind:"Tick",p:"Rapidly chews through the durability of worn armor and held tools at about 4x normal wear.",m:"Eats a mob's equipped gear.",e:D},
+ drill:{cat:"mining",kind:"Attribute",p:"Faster block breaking plus mining efficiency.",m:"Attribute applies, mobs don't mine.",e:D},
+ bulwark:{cat:"survival",kind:"Attribute",p:"Strong resistance to explosions and knockback.",m:"Same.",e:D},
+ haze:{cat:"vision",kind:"Client",p:"A thick haze closes in around you, starting a little way out and hiding the distance.",m:"No effect, visual only.",e:D},
+ hallucination:{cat:"vision",kind:"Client",p:"A Steve apparition with glowing white eyes at 50% that vanishes the instant you look at it, phantom hostile sounds at 40%, plus rare fake hurt and creeper scares at 5% each. First one about 5s in, then every 30s to 3min.",m:"No effect.",e:D},
+ veil:{cat:"utility",kind:"Tick · client",p:"Conceals your status: the swirling particles of every effect on you vanish for everyone, and your effect icons and duration timers are hidden from your own inventory screen.",m:"Hides a mob's effect particles.",e:D},
+ inversion:{cat:"movement",kind:"Client + server",p:"Gravity flips and you walk the ceiling. The world renders upside down and mouse look inverts on both axes.",m:"Lifted upward and rendered upside down.",e:D},
+ volatile:{cat:"combat",kind:"Tick",p:"Swells for ~3s, then detonates once with a charged creeper explosion.",m:"Same.",e:"The blast damages blocks if potion griefing is on."},
+ bury:{cat:"movement",kind:"Tick · one shot",p:"One shot: teleports you straight down about 10 blocks, carving a safe air pocket and dropping the removed blocks as items.",m:"Teleports the mob straight down about 10 blocks.",e:"Carves a safe air pocket and drops the displaced blocks as items."},
+ delve:{cat:"movement",kind:"Tick · one shot",p:"One shot: teleports you down to deepslate depth somewhere in the chunk, carving a safe pocket to land in.",m:"Teleports the mob underground.",e:"Carves a small air pocket at the landing spot."},
+ hunted:{cat:"curse",kind:"Tick",p:"You glow and every nearby hostile mob is forced to target you.",m:"All hostiles target the marked mob.",e:D},
+ green_thumb:{cat:"environment",kind:"World area",p:"Bonemeals a 3 wide, 2 tall patch of ground one block ahead of you.",m:"Same.",e:"Grows a 3 wide strip of plants ahead."},
+ adrenaline:{cat:"combat",kind:"Tick",p:"As your health drops, your speed increases and your melee gains a bonus up to about 1.5 times.",m:"Same, faster and stronger when wounded.",e:D},
+ second_wind:{cat:"survival",kind:"Event",p:"Once per 30s, an otherwise lethal hit leaves you at 1 health with a brief burst of Resistance instead of killing you.",m:"Same save.",e:D},
+ anchor_recall:{cat:"movement",kind:"Tick · player",p:"Records where you drank it. Crouch for about 2 seconds to teleport back to that spot.",m:"No effect, no crouch.",e:D},
+ momentum:{cat:"movement",kind:"Tick · attribute",p:"The longer you keep running, the faster you go, building from Speed 1 up to Speed 7 over ~7s. Stopping resets it.",m:"Same ramp.",e:D},
+ rift_step:{cat:"movement",kind:"Tick · player",p:"A sprint jump blinks you up to 12 blocks forward, stopping at the first wall.",m:"No effect.",e:D},
+ silent_step:{cat:"utility",kind:"Mixin",p:"You give off no vibrations, sculk sensors and the Warden never notice you.",m:"Mob is silent to sculk too.",e:D},
+ petrify:{cat:"curse",kind:"Tick + event + render",p:"Turned to stone: totally frozen, unable to move or turn the camera, but completely invulnerable, tinted grey.",m:"Frozen solid with no movement or turning, and invulnerable. Greyed.",e:D},
+ phosphor:{cat:"environment",kind:"World area",p:"Temporary light blocks appear around you and fade on their own, lighting the area.",m:"Same aura.",e:"Fills the area with temporary light blocks that fade on their own."},
+ antigravity:{cat:"movement",kind:"Tick · client/server + event",p:"Zero gravity in every direction. Jumps and hits carry you and what you hit drifting until drag stops you.",m:"Floats freely. Knocked mobs sail away.",e:D},
+ slumber:{cat:"curse",kind:"Tick",p:"Deepening drowsiness drops you into a forced sleep, slumped and fully immobilized, then leaves you immune to it for a while on waking.",m:"Same, collapses asleep.",e:D},
+ highly_flammable:{cat:"curse",kind:"Tick",p:"If you catch fire, you detonate in an explosion that hurts you, then the effect is spent.",m:"Same. Detonates once lit.",e:"As a cloud, any ignition flash burns it."},
+ vacuum:{cat:"curse",kind:"Tick + client display",p:"Your air bubbles drain away and, once empty, you start to suffocate. Lasts ~15s.",m:"Same.",e:D},
+ acid:{cat:"environment",kind:"World area · destructive",p:"Surfaces around you dissolve away, sparing bedrock, obsidian and netherite. Reverts if griefing is off.",m:"Same aura.",e:"Eats most block surfaces it touches, sparing bedrock/obsidian/netherite. Reverts if griefing is off."},
+
+ fake_low_health:{cat:"vision",kind:"Client · interface",p:"Your health bar shows you as about to die, even at full health. Purely visual.",m:"No effect.",e:D},
+ inventory_mirage:{cat:"vision",kind:"Client · interface",p:"Your hotbar shows the wrong items, your real inventory is untouched.",m:"No effect.",e:D},
+ block_mirage:{cat:"vision",kind:"Client · mixin",p:"The world is disguised. Solid blocks render as other solids, plants as other plants, water takes a random tint, re-rolled each time it's applied.",m:"No effect.",e:D},
+ brittle_touch:{cat:"mining",kind:"Event · mining",p:"A block you mine drags its touching matching blocks down with it, a small gated vein spread.",m:"No effect.",e:"Breaks neighbouring like blocks (griefing gated)."},
+ molten_pick:{cat:"mining",kind:"Event · mining",p:"Raw iron, copper and gold you mine drop already smelted. Ancient debris drops as netherite scrap.",m:"No effect.",e:D},
+ echolocation:{cat:"utility",kind:"Tick",p:"Every few seconds, hostile mobs within about 20 blocks glow and are visible through walls.",m:"Reveals hostiles around the mob.",e:D},
+ stoneskin:{cat:"survival",kind:"Attribute",p:"A coat of stone: heavy armour, toughness and knockback resistance.",m:"Same.",e:D},
+ tidewalker:{cat:"movement",kind:"Attribute + tick",p:"Swim fast, but slowed and sluggish whenever you're on dry land.",m:"Same.",e:D},
+ conduit_blessing:{cat:"survival",kind:"Tick",p:"Underwater you gain full Conduit Power: night vision, water breathing, and fast mining. Nothing on land.",m:"Same.",e:D},
+ deep_delver:{cat:"mining",kind:"Tick",p:"Mining speed scales with depth: Mining Fatigue at or above sea level, ramping up to Haste 4 deep in the deepslate.",m:"Attribute applies.",e:D},
+ colorblind:{cat:"vision",kind:"Client · shader",p:"The world desaturates to greyscale.",m:"No effect.",e:D},
+ overclock:{cat:"mining",kind:"Tick · display meter",p:"Haste with a heat gauge that swinging tools fills. At max it overheats into a minute of Mining Fatigue.",m:"No effect.",e:D},
+ greedy_pick:{cat:"mining",kind:"Event · mining",p:"A 10% chance a mined block drops nothing.",m:"No effect.",e:D},
+ creeper_vision:{cat:"vision",kind:"Client",p:"Phantom creepers appear at the edge of your sight with a fuse hiss, vanishing if you look right at them. Purely visual.",m:"No effect.",e:D},
+ mob_mask:{cat:"vision",kind:"Client · render",p:"You render to everyone as a mob, walking 1:1 with you: the mob of a worn mob head if you wear one, otherwise a mob copied from within 10 blocks or a random fitting species. Hostiles stop attacking the disguise.",m:"No effect.",e:D},
+ verdance:{cat:"environment",kind:"World area",p:"A frequent, wide growth aura: bonemeals a ~5 block area all around you.",m:"Same aura.",e:"Rapidly grows plants in a 5 block area."},
+ sculk_creep:{cat:"curse",kind:"World area",p:"Sculk veins creep over the surfaces around you. Struck again, a veined surface hardens into a sculk block.",m:"Same aura.",e:"Veins → sculk blocks over time."},
+ vein_sense:{cat:"mining",kind:"Self · mining",p:"While you mine, ore of the same type nearby sparkles.",m:"No effect.",e:D},
+ hotbar_shuffle:{cat:"curse",kind:"Tick · player",p:"Two of your hotbar slots swap places about every 1.25s.",m:"No effect.",e:D},
+
+ // ---- vanilla potions & water (reference only) ----
+ v_water:{cat:"utility",kind:"Vanilla",p:"No effect, brewing base. Thrown splash form puts out fire.",m:D,e:"Splash form extinguishes fire and fills cauldrons / hydrates farmland."},
+ v_awkward:{cat:"utility",kind:"Vanilla",p:"No effect, the base for nearly every brewed potion.",m:D,e:D},
+ v_strength:{cat:"combat",kind:"Vanilla",p:"Increased melee damage.",m:"Same.",e:D},
+ v_swiftness:{cat:"movement",kind:"Vanilla",p:"+20% movement speed.",m:"Same.",e:D},
+ v_slowness:{cat:"curse",kind:"Vanilla",p:"Reduced movement speed.",m:"Same.",e:D},
+ v_leaping:{cat:"movement",kind:"Vanilla",p:"Higher jumps and reduced fall damage.",m:"Same.",e:D},
+ v_healing:{cat:"survival",kind:"Vanilla",p:"Instantly restores health.",m:"Heals, but harms undead.",e:D},
+ v_harming:{cat:"combat",kind:"Vanilla",p:"Instant damage.",m:"Damages, but heals undead.",e:D},
+ v_poison:{cat:"curse",kind:"Vanilla",p:"Damage over time, won't drop you below 1 health.",m:"Same.",e:D},
+ v_regeneration:{cat:"survival",kind:"Vanilla",p:"Heals over time.",m:"Same.",e:D},
+ v_fire_resistance:{cat:"survival",kind:"Vanilla",p:"Immune to fire and lava damage.",m:"Same.",e:D},
+ v_water_breathing:{cat:"survival",kind:"Vanilla",p:"Breathe underwater.",m:"Same.",e:D},
+ v_night_vision:{cat:"utility",kind:"Vanilla",p:"See clearly in the dark and underwater.",m:"Same.",e:D},
+ v_invisibility:{cat:"utility",kind:"Vanilla",p:"Turn invisible, worn gear still shows.",m:"Mob turns invisible.",e:D},
+ v_weakness:{cat:"curse",kind:"Vanilla",p:"Reduced melee damage.",m:"Same.",e:D},
+ v_turtle_master:{cat:"survival",kind:"Vanilla",p:"Resistance plus Slowness.",m:"Same.",e:D},
+ v_slow_falling:{cat:"movement",kind:"Vanilla",p:"Fall slowly and take no fall damage.",m:"Same.",e:D},
+ v_luck:{cat:"utility",kind:"Vanilla",p:"Improves loot table luck rolls.",m:D,e:D},
+ v_wind_charged:{cat:"curse",kind:"Vanilla",p:"On death, burst a wind charge that launches things.",m:"Same.",e:D},
+ v_oozing:{cat:"curse",kind:"Vanilla",p:"On death, spawn slimes.",m:"Same.",e:D},
+ v_weaving:{cat:"curse",kind:"Vanilla",p:"On death, spread cobwebs nearby.",m:"Same.",e:"Lays cobwebs around the death spot."},
+ v_infested:{cat:"curse",kind:"Vanilla",p:"When hurt, a chance to spawn silverfish.",m:"Same.",e:D},
+ phase_miner:{cat:"mining",kind:"Event · mining",p:"Mined blocks teleport straight into your inventory.",m:"No effect.",e:D},
+ storm_caller:{cat:"combat",kind:"Event",p:"During rain or thunder, striking a mob calls a lightning bolt down on it with a short cooldown.",m:"Same.",e:D},
+ magma_walker:{cat:"movement",kind:"Tick + temp blocks",p:"Lava beneath your feet briefly hardens into walkable magma, and you stay fire safe while it lasts.",m:"Same.",e:"Briefly solidifies lava to magma blocks."},
+ spider_climb:{cat:"movement",kind:"Tick · client/server",p:"Climb any wall. Never fall while touching one.",m:"Mobs climb walls too.",e:D},
+ slime_form:{cat:"movement",kind:"Event + client",p:"Bounce off the ground instead of taking fall damage, and cling to walls.",m:"Same, bounces.",e:D},
+ solar_flare:{cat:"combat",kind:"Tick + temp light",p:"Daylight level light follows you and any undead within the radius burst into flame.",m:"Same.",e:"Fills the area with temporary light."},
+ time_dilation:{cat:"utility",kind:"Tick",p:"You keep full speed while nearby mobs and projectiles crawl.",m:"Same field.",e:D},
+ blink:{cat:"movement",kind:"Tick · player",p:"Sneak tap to teleport a short distance toward where you're looking, stopping at walls.",m:"No effect.",e:D},
+ ender_tether:{cat:"movement",kind:"Tick · player",p:"An anchor is set when you drink it. Crouch about 2s to recall there and drag nearby mobs along with you.",m:"No effect.",e:D},
+ hollow_step:{cat:"utility",kind:"Tick + mixin + client",p:"Fully invisible including model and armor with no particles, and vibration silent. Mobs can't lock on unless you run right into them.",m:"Same.",e:D},
+ evil_omen:{cat:"curse",kind:"Tick",p:"Nearby hostiles home in and more spawn in the dark around you.",m:"Same.",e:D},
+ trade_tongue:{cat:"utility",kind:"Tick",p:"Villager trades are cheaper, grants Hero of the Village.",m:"No effect.",e:D},
+ doppelganger:{cat:"vision",kind:"Tick + decoy",p:"Hold crouch about 1s to spawn a decoy clone that bolts off where you're looking and pulls all nearby aggro while you turn fully invisible.",m:"Mob turns invisible. Its decoy runs at the nearest player.",e:D},
+ blockform:{cat:"vision",kind:"Tick + client render",p:"You vanish completely and a 2 tall stack of whatever block you're standing on renders in your place, snapped to the grid. Attacking or entering water drops the disguise. Stand still on dry land for 5 seconds and it re-arms.",m:"No effect.",e:D},
+ riptide_strike:{cat:"combat",kind:"Event · on hit",p:"Melee unleashes a water burst knockback cone in front of you, wider & stronger while wet.",m:"Same.",e:D},
+ vampiric_aura:{cat:"survival",kind:"Event",p:"Heal whenever any mob dies near you, not just your own kills.",m:"Same.",e:D},
+ berserk:{cat:"combat",kind:"Event · on hit",p:"Consecutive hits on the same target ramp your damage and attack speed.",m:"Same.",e:D},
+ riposte_charge:{cat:"combat",kind:"Event",p:"Taking or blocking a hit charges your next strike to hit twice as hard.",m:"Same.",e:D},
+ frost_brand:{cat:"combat",kind:"Event · on hit",p:"Your melee hits slow targets and build frostbite.",m:"Same.",e:D},
+ ignite_touch:{cat:"combat",kind:"Event · on hit",p:"Your melee sets targets on fire.",m:"Same.",e:D},
+ chain_strike:{cat:"combat",kind:"Event · on hit",p:"Your melee arcs lightning to up to 3 nearby foes, 5 in rain or water.",m:"Same.",e:D},
+ vein_miner:{cat:"mining",kind:"Event · mining",p:"Mining an ore breaks the whole connected vein.",m:"No effect.",e:"Breaks connected ore (griefing aware)."},
+ tunnel_bore:{cat:"mining",kind:"Event · mining",p:"Break a 3\u00d73 around the block you mine.",m:"No effect.",e:"Carves a 3×3 tunnel."},
+ silk_hands:{cat:"mining",kind:"Event · mining",p:"Blocks drop as themselves with silk touch.",m:"No effect.",e:D},
+ treasure_sense:{cat:"mining",kind:"Tick · self",p:"Nearby chests and containers shimmer through walls.",m:"No effect.",e:D},
+ fortune_vein:{cat:"mining",kind:"Event · mining",p:"Ores you mine often drop an extra, with no downside. Long lasting.",m:"No effect.",e:D},
+ breeze_blessing:{cat:"movement",kind:"Client",p:"Breeze Step's mid air hop, plus an aimed dash toward your look on the next air press.",m:"No effect.",e:D},
+ wall_run:{cat:"movement",kind:"Client",p:"Press into a wall in the air to run along it for ~1.2s.",m:"No effect.",e:D},
+ glide:{cat:"movement",kind:"Client",p:"Hold jump while falling to glide forward where you look.",m:"No effect.",e:D},
+ bunnyhop:{cat:"movement",kind:"Client",p:"Each jump keeps and slightly grows your horizontal speed.",m:"No effect.",e:D},
+ shieldskin:{cat:"survival",kind:"Tick",p:"A recharging absorption shield of golden hearts that soaks a hit, then rebuilds over about 5s.",m:"Same.",e:D},
+ last_stand:{cat:"survival",kind:"Event",p:"An otherwise lethal hit leaves you at 1 health with about 5s of near invulnerability. 60s cooldown.",m:"Same.",e:D},
+ kaleidoscope:{cat:"vision",kind:"Client · shader",p:"The world swirls and washes in shifting rainbow colour.",m:"No effect.",e:D},
+ gravity_flux:{cat:"curse",kind:"Tick · client/server",p:"Gravity flips up and down on a shifting random timer.",m:"Same.",e:D},
+ hotpotato:{cat:"curse",kind:"Tick · display",p:"A lit fuse shown as a gauge above the hotbar. Touch another living thing to pass it, or it detonates on you.",m:"Same, passes on contact.",e:"The detonation damages blocks if griefing is on."},
+ auto_replant:{cat:"mining",kind:"Event · mining",p:"Harvest a mature crop and replant it in the same swing.",m:"No effect.",e:D},
+ lumberjack:{cat:"mining",kind:"Event · mining",p:"Break one log and the whole tree comes down.",m:"No effect.",e:"Fells connected logs."},
+ ground_pound:{cat:"combat",kind:"Client + fall event",p:"Crouch in mid air to slam straight down, knocking back and hurting everything where you land. You take no fall damage.",m:"No effect.",e:D},
+ long_jump:{cat:"movement",kind:"Client",p:"A sprint jump launches you about 7 blocks forward.",m:"No effect.",e:D},
+ mantle:{cat:"movement",kind:"Client",p:"Cling to walls, with one ~2 block wall jump each time you stick.",m:"No effect.",e:D},
+ swim_dash:{cat:"movement",kind:"Client",p:"Press jump while swimming or sprinting to dash about 5 blocks forward underwater.",m:"No effect.",e:D},
+ scavenger:{cat:"combat",kind:"Event",p:"Mobs you kill drop extra loot.",m:"No effect.",e:D},
+ breeze_bound:{cat:"utility",kind:"Event · on death",p:"When you die, a Breeze bursts into being.",m:"Same, spawns a Breeze on death.",e:D},
+ blaze_bound:{cat:"curse",kind:"Event · on death",p:"When you die, a Blaze erupts.",m:"Same, spawns a Blaze on death.",e:D},
+ bone_bound:{cat:"curse",kind:"Event · on death",p:"When you die, skeletons rise from your remains.",m:"Same, spawns skeletons on death.",e:D},
+ creeper_bound:{cat:"curse",kind:"Event · on death",p:"When you die, a creeper spawns where you fell.",m:"Same, spawns a creeper on death.",e:D},
+};
+const CASE_IC={p:"🧍",m:"🐺",e:"🌍"};
+
+// ---------- build ----------
+const byKey={}; NODES.forEach(n=>byKey[n[0]]=n); VANILLA.forEach(n=>byKey[n[0]]=n);
+const tree=document.getElementById("tree");
+const svg=document.getElementById("links");
+const nodeEls={};
+const LS="cpa_spell_works";
+let works=JSON.parse(localStorage.getItem(LS)||"{}");
+// A downloaded copy bakes its checkmarks in here, so opening it restores your progress.
+if(window.__CPA_WORKS__){works=Object.assign(works,window.__CPA_WORKS__);localStorage.setItem(LS,JSON.stringify(works));}
+
+// legend doubles as category filter toggles, all on by default; click one to hide/show that category.
+const catOn={}; Object.keys(CATS).forEach(k=>catOn[k]=true);
+const catCount={}; [...NODES,...VANILLA].forEach(n=>{ const c=INFO[n[0]]?.cat; if(c) catCount[c]=(catCount[c]||0)+1; });
+document.getElementById("legend").innerHTML=
+  `<span class="legendhint">Filter category:</span>`+
+  Object.entries(CATS).map(([k,v])=>
+    `<button class="catbtn" data-cat="${k}" title="Toggle ${v} spells"><i class="dot" style="color:var(--${k})"></i>${v}<span class="catcount">${catCount[k]||0}</span></button>`).join("");
+document.querySelectorAll("#legend .catbtn").forEach(b=>b.addEventListener("click",()=>{
+  const c=b.dataset.cat;
+  catOn[c]=!catOn[c];
+  b.classList.toggle("off",!catOn[c]);
+  applyFilter();
+}));
+
+// Generation is DERIVED from the recipe graph so the tree self-maintains: a spell always sits one row
+// below its deepest ingredient. Vanilla bases are generation 0; gen(node) = 1 + max(gen of its parents).
+const GEN={};
+function genOf(k){
+  if(k in GEN) return GEN[k];
+  const n=byKey[k];
+  if(!n || n[2]==="V"){ GEN[k]=0; return 0; }   // vanilla bases (and unknowns) are the root generation
+  GEN[k]=0;                                       // cycle guard
+  let g=0;
+  for(const p of (n[4]||[])) g=Math.max(g, genOf(p)+1);
+  GEN[k]=g; return g;
+}
+const maxTier=Math.max(0,...NODES.map(n=>genOf(n[0])));
+for(let t=0;t<=maxTier;t++){
+  const tn=NODES.filter(n=>genOf(n[0])===t);
+  if(!tn.length) continue;
+  const tier=document.createElement("div"); tier.className="tier";
+  const lab=document.createElement("p"); lab.className="tlabel"; lab.textContent=TIERLABEL[t]||("Generation "+t);
+  tier.appendChild(lab);
+  const row=document.createElement("div"); row.className="row";
+  tn.sort((a,b)=>(INFO[a[0]]?.cat||"z").localeCompare(INFO[b[0]]?.cat||"z")||a[1].localeCompare(b[1]));
+  tn.forEach(n=>{
+    const inf=INFO[n[0]]||{cat:"utility",kind:""};
+    const el=document.createElement("button"); el.className="node"; el.dataset.k=n[0];
+    el.style.setProperty("--c",`var(--${inf.cat})`);
+    el.innerHTML=`<span class="ck"></span><span class="nm">${n[1]}</span><span class="tg">${t===0?"B":"G"+t}</span>`;
+    el.addEventListener("click",()=>select(n[0]));
+    el.addEventListener("mouseenter",()=>renderLinks(n[0]));     // hover reveals this vial's family tree
+    el.addEventListener("mouseleave",()=>renderLinks(curKey));   // back to the selected vial's lineage (or clear)
+    if(works[n[0]]) el.classList.add("works");
+    row.appendChild(el); nodeEls[n[0]]=el;
+  });
+  tier.appendChild(row); tree.appendChild(tier);
+}
+
+// vanilla potions & water, the roots of the tree, rendered at the very top and wired into the lineage.
+// Water + Awkward (the base of every brew) sit in their own row ABOVE the vanilla potion effects.
+{
+  const buildVanillaTier=(label,list)=>{
+    const tier=document.createElement("div"); tier.className="tier";
+    const lab=document.createElement("p"); lab.className="tlabel vanlabel";
+    lab.textContent=label; tier.appendChild(lab);
+    const row=document.createElement("div"); row.className="row";
+    list.forEach(n=>{
+      const inf=INFO[n[0]]||{cat:"utility"};
+      const el=document.createElement("button"); el.className="node vanilla"; el.dataset.k=n[0];
+      el.style.setProperty("--c",`var(--${inf.cat})`);
+      el.innerHTML=`<span class="nm">${n[1]}</span><span class="tg">V</span>`;
+      el.addEventListener("click",()=>select(n[0]));
+      el.addEventListener("mouseenter",()=>renderLinks(n[0]));   // hover shows what this base brews into
+      el.addEventListener("mouseleave",()=>renderLinks(curKey));
+      row.appendChild(el); nodeEls[n[0]]=el;
+    });
+    tier.appendChild(row);
+    tree.insertBefore(tier, tree.firstChild); // last inserted lands on top
+  };
+  const baseKeys=["v_water","v_awkward"];
+  // Insert the effects row first, then the base row, so Water & Awkward end up at the very top.
+  buildVanillaTier("Vanilla Potion Effects", VANILLA.filter(n=>!baseKeys.includes(n[0])));
+  buildVanillaTier("Base, Water & Awkward (every brew starts here)", VANILLA.filter(n=>baseKeys.includes(n[0])));
+}
+
+// ---------- connectors ----------
+// Pan/zoom state for the mobile canvas. scale=1 and no transform on desktop, so the math below is a no-op there.
+const pz={scale:1,x:0,y:0,active:false};
+function center(el){
+  const s=pz.scale||1;
+  const r=el.getBoundingClientRect(), w=tree.getBoundingClientRect();
+  // getBoundingClientRect is post-transform; divide back to the tree's own (unscaled) coordinate space
+  // so the SVG — which is scaled together with the tree inside #wrap — lines up at any zoom.
+  return {x:(r.left-w.left)/s+(r.width/s)/2, y:(r.top-w.top)/s+(r.height/s)/2,
+          top:(r.top-w.top)/s, bot:(r.top-w.top)/s+r.height/s};
+}
+function ancestors(key,set){ (byKey[key]?.[4]||[]).forEach(p=>{ if(byKey[p]&&!set.has(p)){set.add(p);ancestors(p,set);} }); return set; }
+function lineageOf(key){
+  const s=ancestors(key,new Set()); s.add(key);
+  [...NODES,...VANILLA].forEach(n=>{ if((n[4]||[]).includes(key)) s.add(n[0]); }); // direct children too
+  return s;
+}
+function vis(k){ const e=nodeEls[k]; return e && e.style.display!=="none"; }
+function edge(fromK,toK,strong){
+  if(!vis(fromK)||!vis(toK)) return;
+  const a=center(nodeEls[fromK]), b=center(nodeEls[toK]);
+  const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+  const y1=a.bot, y2=b.top, my=(y1+y2)/2;
+  p.setAttribute("d",`M${a.x},${y1} C${a.x},${my} ${b.x},${my} ${b.x},${y2}`);
+  p.setAttribute("fill","none");
+  p.setAttribute("stroke",strong?"var(--accent)":"rgba(155,123,255,.22)");
+  p.setAttribute("stroke-width",strong?"2.2":"1.2");
+  svg.appendChild(p);
+}
+// Family-tree view, on demand: draw the lineage (ancestors + children) of one vial and dim the rest.
+// Hovering a vial previews its family; clicking keeps it (curKey); nothing hovered/selected = clear.
+function renderLinks(key){
+  svg.innerHTML="";
+  const s=pz.scale||1;
+  const w=tree.getBoundingClientRect();
+  const uw=w.width/s, uh=tree.scrollHeight; // scrollHeight is layout (unscaled); width needs the transform divided out
+  svg.setAttribute("viewBox",`0 0 ${uw} ${uh}`);
+  svg.setAttribute("width",uw); svg.setAttribute("height",uh);
+  if(!key){ Object.values(nodeEls).forEach(el=>el.classList.remove("dim","hit")); return; }
+  const lineage=lineageOf(key);
+  lineage.forEach(k=>(byKey[k]?.[4]||[]).forEach(par=>{ if(lineage.has(par)) edge(par,k,true); }));
+  Object.entries(nodeEls).forEach(([k,el])=>{
+    const inLine=lineage.has(k);
+    el.classList.toggle("hit",inLine);
+    el.classList.toggle("dim",!inLine);
+  });
+}
+
+// ---------- detail drawer ----------
+const detail=document.getElementById("detail"), scrim=document.getElementById("scrim");
+let curKey=null;
+// A family tree "pinned" on by a long-press (mobile). Survives opening/closing the info panel.
+let pinnedTree=null;
+function toggleTree(key){
+  pinnedTree = (pinnedTree===key) ? null : key;   // same vial toggles off, a different one switches
+  if(!detail.classList.contains("on")) renderLinks(pinnedTree);
+  if(navigator.vibrate) try{ navigator.vibrate(15); }catch(e){}
+}
+function recipeHTML(r){ return r.replace(/->|→/g,'<span class="arrow">→</span>'); }
+function select(key){
+  const n=byKey[key], inf=INFO[key]||{};
+  if(!n) return;
+  // tapping a spell outside the currently toggled family tree turns that tree off
+  if(pinnedTree && !lineageOf(pinnedTree).has(key)) pinnedTree=null;
+  curKey=key;
+  Object.values(nodeEls).forEach(e=>e.classList.remove("sel"));
+  nodeEls[key].classList.add("sel");
+  document.getElementById("dname").textContent=n[1];
+  const catName=CATS[inf.cat]||"Effect";
+  const durS=DURATION[key];
+  document.getElementById("dchips").innerHTML=
+    `<span class="chip" style="--c:var(--${inf.cat})">${catName}</span>`+
+    `<span class="chip kind">${n[2]==="V"?"Vanilla":t0label(genOf(key))}</span>`+
+    (inf.kind?`<span class="chip kind">${inf.kind}</span>`:"")+
+    (durS!=null?`<span class="chip kind" title="Effect duration">⏱ ${fmtDur(durS)}</span>`:"");
+  // Same "work" description the in-game codex shows (from the effect's .desc lang string).
+  document.getElementById("ddesc").textContent=CODEX_DESC[key]||"";
+  document.getElementById("drecipe").innerHTML=recipeHTML(n[3]);
+  const cases=[["p","Player"],["m","Mob"],["e","Environment"]].map(([k,lab])=>{
+    const txt=inf[k]||"none", none=(txt==="none");
+    return `<div class="case${none?" none":""}"><div class="ic">${CASE_IC[k]}</div>`+
+      `<div><p class="lab">${lab}</p><p class="txt">${none?"No distinct effect.":txt}</p></div></div>`;
+  }).join("");
+  document.getElementById("dcases").innerHTML=cases;
+  document.getElementById("worksbox").style.display = n[2]==="V" ? "none" : ""; // vanilla isn't tracked
+  syncWorks();
+  detail.classList.add("on"); scrim.classList.add("on"); detail.setAttribute("aria-hidden","false");
+  renderLinks(key);
+}
+function t0label(t){ return t==="V"?"Vanilla":t===0?"Brewed":"Generation "+t; }
+function fmtDur(s){ if(s==null) return ""; if(s===0) return "Instant"; return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+function closeDetail(){
+  detail.classList.remove("on"); scrim.classList.remove("on"); detail.setAttribute("aria-hidden","true");
+  detail.style.transform=""; detail.style.opacity=""; // clear any in-progress swipe-down drag
+  nodeEls[curKey]?.classList.remove("sel");
+  curKey=null; renderLinks(pinnedTree); // fall back to the long-pressed family tree (or clear if none)
+}
+document.getElementById("dclose").addEventListener("click",closeDetail);
+scrim.addEventListener("click",closeDetail);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDetail();});
+
+// ---------- works tracking ----------
+const wbox=document.getElementById("worksbox");
+function syncWorks(){ wbox.classList.toggle("on",!!works[curKey]); }
+function toggleWorks(){
+  if(!curKey) return;
+  if(works[curKey]) delete works[curKey]; else works[curKey]=1;
+  localStorage.setItem(LS,JSON.stringify(works));
+  nodeEls[curKey].classList.toggle("works",!!works[curKey]);
+  syncWorks(); updateMeter();
+}
+wbox.addEventListener("click",toggleWorks);
+wbox.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();toggleWorks();}});
+
+function updateMeter(){
+  const tot=NODES.length, n=NODES.filter(x=>works[x[0]]).length;
+  document.getElementById("mnum").textContent=n;
+  document.getElementById("mtot").textContent=tot;
+  document.getElementById("barfill").style.width=(tot?100*n/tot:0)+"%";
+}
+updateMeter();
+
+// ---------- search + filter ----------
+const search=document.getElementById("search"), onlyun=document.getElementById("onlyun");
+function applyFilter(){
+  const q=search.value.trim().toLowerCase();
+  [...NODES,...VANILLA].forEach(n=>{
+    const el=nodeEls[n[0]];
+    const matchQ=!q || n[1].toLowerCase().includes(q) || n[3].toLowerCase().includes(q);
+    const matchU = n[2]==="V" ? true : (!onlyun.checked || !works[n[0]]); // vanilla: only the search filter applies
+    const cat = INFO[n[0]]?.cat;
+    const matchCat = !cat || catOn[cat] !== false; // category toggles (all on by default)
+    el.style.display=(matchQ&&matchU&&matchCat)?"":"none";
+  });
+  // hide empty tiers
+  document.querySelectorAll(".tier").forEach(t=>{
+    const any=[...t.querySelectorAll(".node")].some(e=>e.style.display!=="none");
+    t.style.display=any?"":"none";
+  });
+  renderLinks(curKey);
+}
+search.addEventListener("input",applyFilter);
+onlyun.addEventListener("change",applyFilter);
+
+// ---------- glow overlays: outline each vial red→green by child-count or by effect duration ----------
+const childCount={};
+[...NODES,...VANILLA].forEach(n=>(n[4]||[]).forEach(p=>{ childCount[p]=(childCount[p]||0)+1; }));
+const DURATION={"nausea":60,"blindness":60,"hunger":60,"mining_fatigue":60,"glowing":120,"levitation":30,"saturation":0,"wither":30,"health_boost":120,"absorption":120,"resistance":120,"darkness":60,"haste":120,"grow":120,"giant":180,"shrink":120,"tiny":180,"weightless":120,"heavy":60,"whirlwind":180,"longarm":180,"brittle":60,"dolphins_grace":120,"clarity":120,"corrosion":90,"buoyancy":120,"combustion":30,"sturdy":120,"keen":120,"volatile":10,"chilly":120,"sprout":120,"erode":120,"static":120,"windfall":120,"breeze_step":120,"gills":180,"dredger":120,"inversion":120,"magnetized":180,"moon_gravity":180,"thermite":60,"phantom_legion":240,"faewild":240,"phasing":120,"drill":120,"bulwark":180,"glass_cannon":180,"photosynthesis":180,"acclimated":180,"slippery":120,"haze":120,"colorblind":120,"hallucination":600,"delve":180,"hunted":60,"echolocation":180,"vein_sense":270,"green_thumb":180,"cave_sense":120,"cliffgrip":180,"lifesteal":120,"goat_launch":270,"stoneskin":270,"quicksilver":180,"tidewalker":120,"conduit_blessing":270,"deep_delver":180,"vertigo":60,"hydrophobia":60,"sunburn":60,"icy_tread":180,"hibernate":270,"shadowmeld":180,"resonant":90,"brittle_touch":180,"molten_pick":180,"fake_low_health":90,"inventory_mirage":90,"block_mirage":90,"adrenaline":270,"second_wind":180,"overclock":120,"anchor_recall":180,"hotbar_shuffle":135,"momentum":180,"rift_step":180,"greedy_pick":180,"silent_step":180,"petrify":90,"creeper_vision":90,"mob_mask":90,"phosphor":120,"verdance":270,"permafrost":270,"antigravity":180,"slumber":30,"highly_flammable":180,"vacuum":20,"weaken_soil":90,"acid":135,"bloomlight":180,"sculk_creep":135,"phase_miner":180,"storm_caller":360,"magma_walker":270,"spider_climb":270,"slime_form":270,"solar_flare":270,"time_dilation":270,"blink":270,"ender_tether":270,"hollow_step":270,"evil_omen":135,"trade_tongue":180,"doppelganger":270,"blockform":270,"riptide_strike":360,"vampiric_aura":180,"berserk":360,"riposte_charge":180,"frost_brand":180,"ignite_touch":270,"chain_strike":360,"vein_miner":180,"tunnel_bore":270,"silk_hands":180,"treasure_sense":360,"fortune_vein":360,"breeze_blessing":270,"wall_run":270,"glide":180,"bunnyhop":270,"shieldskin":360,"last_stand":270,"kaleidoscope":90,"gravity_flux":135,"hotpotato":10,"auto_replant":270,"lumberjack":180,"ground_pound":360,"long_jump":270,"mantle":270,"swim_dash":270,"scavenger":270,"breeze_bound":180,"blaze_bound":135,"bone_bound":90,"creeper_bound":180,"doom":1,"sundering":10,"bleeding":10,"hemorrhage":0,"vulnerability":30,"sapping":30,"frostbite":15,"treachery":20,"execution":120,"ambush":120,"rupture":20,"pain_link":20,"blight":30,"wildfire":120,"cordyceps":120,"detonation":30,"infestation":180,"necromancy":180,"frost_nova":180,"rampage":180,"shadow_dance":180,"soul_wisps":180,"foraging":180,"prospecting":180,"ambrosia":120,"warding":120,"deflection":120,"evasion":120,"rally":120,"backlash":120,"lifeline":180,"soul_anchor":600,"cloud_walker":180,"homeward":180,"soaked":180,"polymorph":30,"wild_polymorph":30,"charm":300,"truce":120,"allure":30,"tranquility":300,"bloodmoon":300,"sonar":180,"wakefulness":30,"gambit":180,"treasure_lure":180,"angling":180,"inspiration":180,"penance":180,"gluttony":30,"iron_stomach":180,"cat_eyes":180,"enigma":30,"tipsy":60,"brawler":180,"grappler":180,"stunning_fist":180,"iron_body":180,"counter":180,"haymaker":180,"ravenous":180,"sated":180,"telekinesis":180,"medusa_gaze":180,"monument":180,"quicksand":60,"harmless":45,"enervate":90,"demoralize":90,"contagion":120,"warmth":180,"titanic":120,"alkahest":120,"calcination":120,"carbonization":120,"transmutation":180,"sculk_sense":300,"antimagic":120,"gallop":180,"trample":180,"bonded":300,"pack_leader":300,"kinship":300,"fetch":300,"beckon":180,"bury":180,"veil":180,"separatium":90,"mimicium":90,"collapsium":90};
+const CODEX_DESC={"thermite":"Deals fire damage that water cannot extinguish. Pooled fluid melts downward through stone.","phantom_legion":"Shows other players false copies of the affected player nearby.","moon_gravity":"Greatly reduces gravity, increases jump height, and reduces fall damage.","medusa_gaze":"Mobs held in an unbroken stare slowly turn to stone without being hit.","monument":"Crouch to turn to an invulnerable, immovable statue, then rise.","quicksand":"The afflicted sinks slowly into sand and gravel, mired and blinded once under.","harmless":"The afflicted's attacks deal no damage while it lasts.","enervate":"Slow swings, slow tools, slow feet, plus Sapping's damage cut.","demoralize":"An aura of dread. Every enemy within 10 blocks of the afflicted deals 40% less damage.","contagion":"A spreading plague. Slow damage over time that leaps to nearby foes when the host dies or lands a melee hit.","faewild":"Creates flowering ground effects that heal entities standing in them.","ravenous":"Increases melee damage as the user hunger level drops. Players only.","sated":"Increases toughness as the user hunger level rises. Players only.","telekinesis":"Interact with, mine, place and hit blocks and entities from over 20 blocks away.","grappler":"Unarmed hits pull the target toward the user and lift it slightly.","stunning_fist":"Unarmed hits build stun on a target. Repeated hits briefly stun the target.","iron_body":"Increases unarmed damage and toughness based on how few armor pieces the user wears.","counter":"While unarmed and facing an attacker, incoming melee damage has a high chance to reflect back at the attacker.","haymaker":"Sprint unarmed attacks deal bonus damage and heavy knockback.","brawler":"Unarmed hits deal weapon level damage, increase knockback, and can knock the held item from a target.","magnetized":"Dropped items and experience orbs within 8 blocks fly to the carrier.","gallop":"Drink and ride: your mount gains great speed, higher jumps, and steps up full blocks.","trample":"Sprinting by the user or their mount knocks back and damages enemies.","bonded":"While mounted, your other potion effects flow into your mount. Your splash potions cannot harm it, and fall damage is shared and reduced.","pack_leader":"Tamed animals within 16 blocks deal more damage, move faster, and take less damage.","kinship":"Prevents the user from damaging their pets and slowly heals nearby pets.","fetch":"Your pets gather nearby dropped items and bring them to you.","beckon":"Teleports the user's pets and last mount nearby, then keeps them close while active.","doom":"Marks the target. When the timer ends, the target takes a burst of damage. Applying it again refreshes the timer.","sundering":"Reduces the target armor by 6 while active.","bleeding":"Deals armor piercing damage over time. Reapplying increases the damage.","hemorrhage":"Instantly doubles the remaining duration of every damaging affliction on the target.","vulnerability":"The afflicted takes +50% damage from all sources.","sapping":"The afflicted deals −30% damage from all sources.","frostbite":"Stacking chill. At five stacks the victim freezes solid, and the next melee hit shatters the ice for times 2.5 damage.","treachery":"Forces the target to attack the nearest other hostile mob.","execution":"Your hits instantly finish non boss targets below 15% of their health.","ambush":"Increases damage against targets at full health.","rupture":"Wounds tear only while the victim moves. Holding still is safe, but fleeing causes bleeding.","pain_link":"Links the victim to whoever applied it: damage the applier takes is mirrored onto the victim.","blight":"All healing the afflicted receives becomes damage instead.","wildfire":"Kills ignite every hostile within four blocks.","cordyceps":"Kills sprout fungal growth at the death spot that periodically puffs a small poison cloud.","detonation":"Causes the target to explode on death without breaking blocks.","infestation":"Kills summon allied silverfish that fight briefly for the user.","necromancy":"Slain undead rise as temporary allied undead.","frost_nova":"Kills release a freezing ring that slows nearby mobs and places frost.","rampage":"Kill streaks stack extra damage. Taking any hit resets the streak to nothing.","shadow_dance":"Kills grant full invisibility and clear nearby mob targets. Attacking ends the invisibility.","soul_wisps":"Kills release homing wisps that seek new targets.","foraging":"Killed mobs can drop simple materials such as sticks, string, seeds, and bone.","prospecting":"Killed mobs can drop small amounts of minerals.","ambrosia":"Reduces incoming damage by 80 percent until the user touches liquid.","warding":"Has a 15 percent chance to negate incoming hits.","deflection":"Incoming projectiles are cancelled and re fired back at their shooters.","evasion":"Has a 25 percent chance to teleport the user sideways before a hit lands.","rally":"Half of damage taken is recoverable: land melee hits within six seconds to reclaim it as healing.","backlash":"Being struck discharges a shock into every enemy within six blocks, not just the attacker.","lifeline":"When the user falls below three hearts, restores health and grants brief resistance once.","soul_anchor":"Sets a death checkpoint. If the user dies within ten minutes, they revive at the anchor with low health and the effect ends.","cloud_walker":"Steps onto open air condense into walkable cloud. Crouch to sink through.","homeward":"Channel for ten seconds undisturbed to be teleported to your bed. Any damage breaks the channel.","soaked":"Doubles lightning and cold damage while preventing fire damage.","polymorph":"The victim becomes a sheep for a while. The original returns when it wears off.","wild_polymorph":"Transforms the target into a random mob temporarily.","charm":"Charmed creatures fight for the user, follow them, teleport nearby, and sit on command. Bosses resist.","truce":"Clears hostile targets from affected mobs.","allure":"Makes breedable animals enter love mode.","tranquility":"Prevents about half of nearby natural monster spawns.","bloodmoon":"Doubles natural monster spawns within 64 blocks.","sonar":"You feel what's on the hook before you reel it in.","wakefulness":"Prevents phantom spawns for several nights and clears darkness and nausea.","gambit":"Each yield is either doubled or reduced to nothing.","treasure_lure":"Treasure finds your fishing hook far more often. Junk becomes rare.","angling":"Reduces fishing wait time and improves catch quality.","inspiration":"Increases experience gained by 50 percent and reduces anvil and enchanting costs by three levels.","penance":"Converts damage taken into experience for the user.","gluttony":"Restores hunger and saturation, heals over time, and greatly slows movement.","iron_stomach":"Prevents harmful effects from rotten flesh, spider eyes, poisonous potatoes, and suspicious stew.","cat_eyes":"Improves dark vision, but bright light briefly blinds the user.","enigma":"Grants two strong beneficial effects and one harmful effect based on the current day.","tipsy":"Increases melee damage, lowers defense, and adds movement wobble.","warmth":"Never freezes, ignores powder snow, Permafrost chill, and freeze damage, and melts snow and ice nearby.","titanic":"Greatly increases knockback dealt by attacks.","alkahest":"On contact, breaks the target's held items and armor apart into their raw crafting components.","calcination":"Burns plants into bonemeal, turns sand into glass, fires clay into terracotta, and cooks drops from kills.","carbonization":"Turns nearby plant matter into coal and bonemeal.","transmutation":"Broken copper can become iron, iron can become gold, and gold can rarely become diamond.","sculk_sense":"Creates temporary sculk sensor growth that outlines entities crossing it.","antimagic":"Removes active effects over time, silences spellcasters, and weakens potion effects in the area.","sturdy":"Grants +2 armour and some knockback resistance.","keen":"Quicker attack recovery.","static":"While in water, the surrounding water sources shock nearby entities.","windfall":"Cushions falls and, on landing, bursts a wind charge that blows entities and items away.","breeze_step":"A mid air second jump that pops a wind charge at your feet.","chilly":"Freezes the single water block at your feet to self melting frosted ice and puts out your own fire.","sprout":"Every couple of seconds, bonemeals the single column one block ahead of you, two tall.","erode":"Weathers scattered blocks in a radius: grass to dirt, stone to cobble to gravel, leaves decay.","dredger":"Greatly increases mining speed while underwater.","tidewalker":"Swim fast, but sluggish on land.","nausea":"Distorts movement and vision with nausea.","absorption":"Grants temporary absorption hearts.","brittle":"Increases fall damage taken and knockback received.","buoyancy":"Pushed upward while in water or lava.","clarity":"Cleanses Nausea, Blindness, Mining Fatigue, Poison, and Weakness, and grants soft Night Vision.","darkness":"Darkens vision and limits sight range.","dolphins_grace":"Greatly increases swim speed.","glowing":"Outlines the target so it can be seen through blocks.","grow":"Bonemeals nearby crops and plants, and grows the drinker in size.","giant":"A bigger Grow, 1.5× the size boost and step.","haste":"Increases mining speed.","health_boost":"Increases maximum health while active.","heavy":"Sinks fast, weak jumps, and takes extra fall damage.","hunger":"Drains hunger faster while active.","levitation":"Lifts the target upward while active.","mining_fatigue":"Slows block breaking and attack speed.","resistance":"Reduces incoming damage.","saturation":"Restores hunger and saturation immediately.","shrink":"Smaller body, fits through one block gaps.","tiny":"Twice the Shrink, a much smaller body.","weightless":"Low gravity jumps.","wither":"Deals wither damage over time.","phasing":"Periodically blinks the entity to a random nearby spot.","slippery":"Near frictionless footing, momentum carries across all blocks.","cliffgrip":"Cling to and slowly slide down walls instead of falling.","icy_tread":"Freeze water into self melting ice paths as you walk.","combustion":"Kept on fire while the effect lasts.","whirlwind":"Wider sweep damage and much stronger melee knockback.","glass_cannon":"Increased melee damage, but you take extra damage too.","photosynthesis":"In sunlight, slowly regenerate health + refill hunger.","bloomlight":"Sprouts living light on block contact, glow lichen on land, sea pickles underwater.","acclimated":"Immune to freezing and to soul sand and honey and mud slowdown.","permafrost":"Places snow, freezes water, slows targets, and causes freezing damage.","weaken_soil":"Gradually breaks soft blocks and soil touched by the effect.","cave_sense":"Nearby underground air pockets shimmer through stone within about 16 blocks.","lifesteal":"Heal a fraction of the melee damage you deal.","shadowmeld":"In dim light, hostile mobs lose track of you.","hibernate":"Hold still to regenerate fast and stop losing hunger.","resonant":"Constant loud vibrations that attract sculk and the Warden.","goat_launch":"A chance to ram an attacker away when you're hit.","quicksilver":"Increased move speed with slippery momentum.","vertigo":"Random stumbling shoves + nausea.","hydrophobia":"Take damage while wet from water or rain.","sunburn":"Catch fire in direct daylight.","blindness":"Greatly reduces vision range.","gills":"Breathe, move, and mine easily underwater, but suffocate on land.","longarm":"Longer block and entity interaction reach.","corrosion":"Eats away the durability of the victim's worn and held gear.","drill":"Faster mining, block break speed plus mining efficiency.","bulwark":"Shrug off explosion and knockback forces.","haze":"A thick fog closes in around the viewer.","hallucination":"Shows false sounds, damage, mobs, and creeper warnings to the affected player.","inversion":"Gravity flips upward, you fall up and pin to the ceiling.","volatile":"The affected entity expands briefly, then triggers a creeper explosion.","bury":"Teleports the user once straight down about 10 blocks, carving a safe air pocket and dropping the displaced blocks as items.","delve":"Teleports the user once to a random deep location in the current chunk, carving a safe air pocket and dropping the displaced blocks as items.","hunted":"You glow and every nearby hostile mob is forced to target you.","green_thumb":"Applies bonemeal to a three block wide and two block tall wall of ground one block ahead of the user.","adrenaline":"Strength and speed that climb as your health falls.","second_wind":"Survive one lethal hit at 1 health and gain brief resistance. Has a 30 second cooldown.","anchor_recall":"Crouch a few seconds to teleport back to where the effect was applied.","momentum":"Ground speed ramps the longer you run. Stopping resets it.","rift_step":"A sprint jump blinks you a few blocks forward if the path is clear.","silent_step":"Prevents vibration events so sculk sensors and Wardens do not detect the user.","petrify":"Pinned in place but invulnerable.","phosphor":"Lights the area with temporary light blocks placed on block contact.","antigravity":"Zero gravity in every direction. Jumps and knockbacks carry without falling.","slumber":"Makes targets drowsy, then forces sleep and immobilizes them. Waking grants temporary immunity.","highly_flammable":"If the holder catches fire, it detonates and is hurt.","vacuum":"Drains air until you suffocate, sprinting restores some air, and drags nearby creatures into the suffocation core from up to 5 blocks.","acid":"Gradually dissolves most block surfaces touched by the effect.","fake_low_health":"Your health bar shows you as nearly dead.","inventory_mirage":"Your hotbar shows the wrong items.","block_mirage":"The world's blocks render as other blocks.","brittle_touch":"A mined block's matching neighbours crumble with it.","molten_pick":"Raw metal drops come out pre smelted.","echolocation":"Nearby hostile mobs glow through walls.","stoneskin":"A coat of stone: heavy armour, toughness and knockback resistance.","conduit_blessing":"Full conduit power underwater, nothing on land.","deep_delver":"Mine faster the deeper you are, slower up high.","colorblind":"The world desaturates to greyscale.","overclock":"Grants haste until heat builds up, then causes mining fatigue and hunger.","greedy_pick":"Ore blocks you mine can drop a duplicate.","creeper_vision":"Shows false creepers near the edge of the affected player vision.","mob_mask":"Renders the affected player to everyone as a mob: the mob of a worn mob head if one is worn, otherwise a mob copied from within 10 blocks or a random fitting species. Hostiles ignore the disguise.","verdance":"Frequently applies bonemeal to plants and grass in a wide area around the user.","sculk_creep":"Sculk veins creep over surfaces on block contact, hardening into sculk when struck again.","vein_sense":"Nearby ore blocks sparkle.","hotbar_shuffle":"Every few seconds two hotbar slots swap.","phase_miner":"Mined blocks teleport straight into your inventory.","storm_caller":"During rain and thunder, hitting a mob calls a lightning bolt on it.","magma_walker":"Lava under your feet briefly solidifies to walkable magma.","spider_climb":"Climb any vertical wall. Never fall while touching one.","slime_form":"Bounce off the ground instead of taking fall damage, and stick to walls.","solar_flare":"Creates strong light around the user and sets nearby undead on fire.","time_dilation":"Nearby mobs and projectiles crawl while you keep full speed.","blink":"Sneak tap to teleport a short distance toward where you're looking.","ender_tether":"An anchor is set on drink. Crouch to recall there and yank nearby mobs with you.","hollow_step":"Makes the user fully invisible, hides armor and particles, blocks vibrations, and prevents mobs from targeting them.","evil_omen":"Hostiles spawn densely around you and home in.","trade_tongue":"Villager trades are cheaper while active.","doppelganger":"A decoy clone pulls aggro while you turn fully invisible.","blockform":"Disguises the user as a two block tall stack of the block underfoot. Attacking or entering water breaks the disguise. Standing still restores it after 5 seconds.","riptide_strike":"Melee hits release a water knockback cone. The effect is stronger while wet.","vampiric_aura":"Heal whenever any nearby mob dies.","berserk":"Consecutive hits on one target ramp damage and attack speed.","riposte_charge":"Taking and blocking a hit charges your next strike.","frost_brand":"Your hits slow and briefly freeze enemies.","ignite_touch":"Your melee sets targets on fire.","chain_strike":"Melee chains lightning to nearby foes, more in rain and water.","vein_miner":"Mining an ore breaks the whole connected vein.","tunnel_bore":"Break a 3×3 around the targeted block.","silk_hands":"Blocks you mine drop as themselves.","treasure_sense":"Nearby chests and containers glow through walls.","fortune_vein":"Ores you mine often drop extra.","breeze_blessing":"Breeze Step plus a mid air directional dash on the next air jump.","wall_run":"Run horizontally along a wall briefly.","glide":"Hold jump to glide forward.","bunnyhop":"Chained jumps preserve and grow your speed.","shieldskin":"Grants a regenerating absorption shield that blocks one hit before recharging.","last_stand":"Survive one lethal hit at 1 health and gain about 5 seconds of strong resistance.","kaleidoscope":"Shifts and distorts world colors for the affected player.","gravity_flux":"Gravity randomly flips up and down.","hotpotato":"Starts a countdown. Touch another living entity to pass it on, or it explodes on the holder.","auto_replant":"Harvest a mature crop and replant it in one swing.","lumberjack":"Break one log and the whole tree comes down.","ground_pound":"Crouch mid air to slam down with an area knockback.","long_jump":"A sprint jump launches a big horizontal leap.","mantle":"Cling to walls and perform one wall jump each time you stick.","swim_dash":"Press jump while swimming and sprinting to dash forward underwater.","scavenger":"Mobs you kill drop extra loot.","breeze_bound":"Bursts a Breeze into being on death.","blaze_bound":"A Blaze erupts on death.","bone_bound":"Skeletons rise on death.","creeper_bound":"Creepers spawn on death.","veil":"Conceals the carrier's status: hides the swirling particles of every effect on them, and hides their effect icons and duration timers from the inventory screen.","separatium":"An alchemy fluid. In a tank it un-mixes the potion it contacts back into its unstable component ratio. Splashed on an entity it replaces each reaction-potion effect with its parent effects.","mimicium":"An alchemy fluid. In a tank it copies the composition of the potion fluid it contacts; splashed on an entity it restores half the remaining duration of every active effect.","collapsium":"An alchemy fluid. In a tank it collapses a mixed potion down to a single randomly chosen component. Splashed on an entity it keeps only one random active effect."};
+const childGlow=document.getElementById("childglow");
+const durGlow=document.getElementById("durglow");
+function applyGlow(){
+  Object.entries(nodeEls).forEach(([k,el])=>{
+    let outline="";
+    if(childGlow.checked){
+      const t=Math.min(1,(childCount[k]||0)/5);            // 0 children → red, 5+ → green
+      outline=`2px solid hsl(${Math.round(t*120)} 78% 52%)`;
+    } else if(durGlow.checked){
+      const s=DURATION[k];
+      if(s==null){ outline="2px dashed hsl(0 0% 45%)"; }   // unknown / vanilla / instant → grey
+      else { const t=Math.max(0,Math.min(1,(s-30)/450));   // ≤30s → red, ≥480s (8min) → green
+        outline=`2px solid hsl(${Math.round(t*120)} 78% 52%)`; }
+    }
+    el.style.outline=outline; el.style.outlineOffset=outline?"1px":"";
+  });
+}
+childGlow.addEventListener("change",()=>{ if(childGlow.checked) durGlow.checked=false; applyGlow(); });
+durGlow.addEventListener("change",()=>{ if(durGlow.checked) childGlow.checked=false; applyGlow(); });
+applyGlow();
+
+window.addEventListener("resize",()=>renderLinks(curKey));
+
+// ---------- mobile: collapsible header filters ----------
+(function(){
+  const ft=document.getElementById("filttoggle"); if(!ft) return;
+  ft.addEventListener("click",()=>{
+    const open=document.querySelector("header").classList.toggle("showfilters");
+    ft.setAttribute("aria-expanded",open?"true":"false");
+    window.dispatchEvent(new Event("resize")); // header height changed → recompute the canvas viewport
+  });
+})();
+
+// ---------- mobile: zoomable / pannable tree canvas ----------
+(function(){
+  const wrap=document.getElementById("wrap");
+  const mainEl=document.querySelector("main");
+  const header=document.querySelector("header");
+  const zc=document.getElementById("zoomctl");
+  const CANVAS_W=920;               // fixed layout width so rows lay out legibly, then pan/zoom to navigate
+  const MIN=0.3, MAX=2.6;
+  const mq=window.matchMedia("(max-width:820px)");
+  const modehint=document.getElementById("modehint");
+  const defaultHint=modehint.textContent;
+
+  let userZoomed=false;             // once the user pinches/zooms, stop auto-refitting on resize
+  const clampS=s=>Math.max(MIN,Math.min(MAX,s));
+  function apply(){ wrap.style.transform=`translate(${pz.x}px,${pz.y}px) scale(${pz.scale})`; }
+  function clampPan(){
+    const vw=mainEl.clientWidth, vh=mainEl.clientHeight, m=64;
+    const cw=CANVAS_W*pz.scale, ch=wrap.offsetHeight*pz.scale;
+    pz.x = cw<=vw ? (vw-cw)/2 : Math.min(m,Math.max(vw-cw-m,pz.x));
+    pz.y = ch<=vh ? Math.min(m,pz.y) : Math.min(m,Math.max(vh-ch-m,pz.y));
+  }
+  function fit(){
+    pz.scale=clampS(mainEl.clientWidth/CANVAS_W);
+    pz.x=(mainEl.clientWidth-CANVAS_W*pz.scale)/2; pz.y=8;
+    userZoomed=false; apply(); renderLinks(curKey);
+  }
+  function sizeMain(){ mainEl.style.height=(window.innerHeight-header.offsetHeight)+"px"; }
+  function enter(){
+    if(pz.active) return;
+    pz.active=true; document.body.classList.add("panmode");
+    sizeMain(); fit();
+    modehint.textContent="Pinch to zoom · drag to pan · tap a vial for details · hold for its family tree.";
+  }
+  function exit(){
+    if(!pz.active) return;
+    pz.active=false; document.body.classList.remove("panmode");
+    mainEl.style.height=""; pz.scale=1; pz.x=0; pz.y=0; wrap.style.transform="";
+    modehint.textContent=defaultHint; renderLinks(curKey);
+  }
+  const sync=()=>{ mq.matches ? enter() : exit(); };
+
+  // zoom toward a point (in main-container coordinates), keeping that point fixed on screen
+  function zoomTo(ns,px,py){
+    ns=clampS(ns); userZoomed=true;
+    const cx=(px-pz.x)/pz.scale, cy=(py-pz.y)/pz.scale;
+    pz.scale=ns; pz.x=px-cx*ns; pz.y=py-cy*ns; clampPan(); apply(); renderLinks(curKey);
+  }
+
+  // ---- touch gestures ----
+  let mode=0, startD=0, startScale=1, lastX=0, lastY=0, startX=0, startY=0, moved=false, pMid=null;
+  let lpTimer=0, lpNode=null, suppressClick=false;   // long-press → toggle family tree
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+  function mid(t){ const r=mainEl.getBoundingClientRect();
+    return {x:(t[0].clientX+t[1].clientX)/2-r.left, y:(t[0].clientY+t[1].clientY)/2-r.top}; }
+  mainEl.addEventListener("touchstart",e=>{
+    if(!pz.active) return;
+    suppressClick=false; clearTimeout(lpTimer);
+    if(e.touches.length===1){
+      mode=1; const t=e.touches[0]; lastX=startX=t.clientX; lastY=startY=t.clientY; moved=false;
+      lpNode=(e.target&&e.target.closest)?e.target.closest(".node"):null;
+      if(lpNode){ lpTimer=setTimeout(()=>{ if(!moved){ suppressClick=true; toggleTree(lpNode.dataset.k); } },450); }
+    } else if(e.touches.length>=2){ clearTimeout(lpTimer); mode=2; startD=dist(e.touches)||1; startScale=pz.scale; pMid=mid(e.touches); }
+  },{passive:false});
+  mainEl.addEventListener("touchmove",e=>{
+    if(!pz.active||!mode) return;
+    if(mode===1&&e.touches.length===1){
+      const t=e.touches[0], dx=t.clientX-lastX, dy=t.clientY-lastY; lastX=t.clientX; lastY=t.clientY;
+      if(!moved && Math.abs(t.clientX-startX)+Math.abs(t.clientY-startY)>8){ moved=true; clearTimeout(lpTimer); }
+      if(moved){ e.preventDefault(); pz.x+=dx; pz.y+=dy; clampPan(); apply(); }
+    } else if(mode===2&&e.touches.length>=2){
+      e.preventDefault(); userZoomed=true;
+      const d=dist(e.touches), m=mid(e.touches);
+      const cx=(pMid.x-pz.x)/pz.scale, cy=(pMid.y-pz.y)/pz.scale;
+      pz.scale=clampS(startScale*d/startD); pz.x=m.x-cx*pz.scale; pz.y=m.y-cy*pz.scale; pMid=m;
+      clampPan(); apply();
+    }
+  },{passive:false});
+  mainEl.addEventListener("touchend",e=>{
+    if(!pz.active) return;
+    clearTimeout(lpTimer);
+    // a tap (mode 1, no movement, no long-press) is left un-prevented so the node's click opens the drawer
+    if(e.touches.length===0){ if(mode===2) renderLinks(curKey); mode=0; }
+    else if(e.touches.length===1){ mode=1; const t=e.touches[0]; lastX=t.clientX; lastY=t.clientY; moved=true; }
+  },{passive:false});
+  // redraw the (potentially off-screen) lineage lines once a pan/pinch settles
+  mainEl.addEventListener("touchend",()=>{ if(pz.active&&mode===0) renderLinks(detail.classList.contains("on")?curKey:pinnedTree); },{passive:true});
+  // a long-press already handled this vial → swallow the click it would generate so the panel doesn't also open
+  mainEl.addEventListener("click",e=>{ if(suppressClick){ e.stopPropagation(); e.preventDefault(); suppressClick=false; } },true);
+
+  // ---- zoom buttons ----
+  zc.querySelector("#zin").addEventListener("click",()=>zoomTo(pz.scale*1.35, mainEl.clientWidth/2, mainEl.clientHeight/2));
+  zc.querySelector("#zout").addEventListener("click",()=>zoomTo(pz.scale/1.35, mainEl.clientWidth/2, mainEl.clientHeight/2));
+  zc.querySelector("#zfit").addEventListener("click",fit);
+
+  if(mq.addEventListener) mq.addEventListener("change",sync);
+  // Drive enter/exit from the resize event too — some browsers/harnesses don't fire the matchMedia change
+  // reliably. After (possibly) entering, refit while the user hasn't taken manual control; else keep it on-screen.
+  window.addEventListener("resize",()=>{
+    sync();
+    if(pz.active){ sizeMain(); if(userZoomed){ clampPan(); apply(); } else fit(); }
+  });
+  window.addEventListener("orientationchange",()=>{ setTimeout(()=>{ sync(); if(pz.active){ sizeMain(); fit(); } },220); });
+  sync();
+})();
+
+// ---------- mobile: swipe the info panel down to dismiss ----------
+(function(){
+  const d=document.getElementById("detail"); if(!d) return;
+  const body=d.querySelector(".dbody");
+  let sy=0, dy=0, drag=false;
+  d.addEventListener("touchstart",e=>{
+    if(e.touches.length!==1 || !d.classList.contains("on")){ drag=false; return; }
+    // only start a dismiss drag from the sheet header, or when the scrollable content is already at the top
+    if(body.scrollTop>0 && !(e.target.closest&&e.target.closest(".dhead"))){ drag=false; return; }
+    sy=e.touches[0].clientY; dy=0; drag=true; d.style.transition="none";
+  },{passive:true});
+  d.addEventListener("touchmove",e=>{
+    if(!drag) return;
+    dy=e.touches[0].clientY-sy;
+    if(dy>0){ e.preventDefault(); d.style.transform=`translateY(${dy}px)`; d.style.opacity=String(Math.max(.4,1-dy/700)); }
+  },{passive:false});
+  d.addEventListener("touchend",()=>{
+    if(!drag) return; drag=false; d.style.transition=""; d.style.opacity="";
+    if(dy>110){ closeDetail(); }        // dragged far enough → dismiss (closeDetail clears the inline transform)
+    else { d.style.transform=""; }      // snap back
+  },{passive:true});
+})();
+</script>
+
+</body>
+</html>
